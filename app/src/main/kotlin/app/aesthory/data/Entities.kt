@@ -116,6 +116,7 @@ data class CurrentHabit(
     @Embedded val definition: HabitVersionEntity,
     val position: Int,
     val state: HabitState,
+    val routineId: String = "",
 )
 
 @Entity(

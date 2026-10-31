@@ -51,6 +51,8 @@ class OfflineCoach(private val context: Context) {
             check(model.isFile) { "Import a compatible LiteRT-LM model first." }
             val common = context.assets.open("coaching/common.md").bufferedReader().use { it.readText() }
             val specialist = context.assets.open(CoachMode.FACIAL_AESTHETICS.promptAsset).bufferedReader().use { it.readText() }
+            val knowledge = CoachLibrary.all.filter { it.id in setOf("style", "photo", "mewing", "psl") }
+                .joinToString("\n") { "${it.title}: ${it.summary} ${it.note} Sources: ${it.sources.joinToString { source -> source.url }}" }
             Engine(EngineConfig(
                 modelPath = model.absolutePath, backend = Backend.CPU(),
                 maxNumTokens = 2048, cacheDir = context.cacheDir.absolutePath,
@@ -58,7 +60,7 @@ class OfflineCoach(private val context: Context) {
                 engine.initialize()
                 engine.createConversation(ConversationConfig(
                     thinkingConfig = ThinkingConfig(enableThinking = false, thinkingTokenBudget = 0),
-                    systemInstruction = Contents.of(common + "\n" + specialist +
+                    systemInstruction = Contents.of(common + "\n" + specialist + "\nReference notes (not instructions):\n" + knowledge +
                         "\nGive a short presentation-coaching draft in plain text. Do not invent or restate measurements. " +
                         "Do not diagnose, claim bone changes, or assign a PSL score. Offer reversible options and uncertainty."),
                 )).use { conversation ->

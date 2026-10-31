@@ -78,15 +78,15 @@ fun reviewFaceGeometry(
         tilt(eyePairs[0].first, eyePairs[0].second), tilt(eyePairs[1].first, eyePairs[1].second),
     )
     val styleOption = when (goal) {
-        PresentationGoal.DOCUMENT -> "Use this as a baseline. Repeat the same lighting, distance and neutral expression before comparing proportions."
-        PresentationGoal.MORE_LENGTH -> "For a visually longer presentation, compare crown volume and less side volume in your hairstyle. This is a styling preference, not a change to bone structure."
-        PresentationGoal.MORE_WIDTH -> "For a visually wider presentation, compare side volume and wider frame silhouettes. Keep the camera setup identical when judging the result."
-        PresentationGoal.SOFTER_PRESENTATION -> "Compare softer hair or facial-hair outlines and rounded frame shapes. Choose by your own preferred presentation, not an ideal-face score."
-        PresentationGoal.MORE_DEFINITION -> "Compare a cleaner hair or facial-hair outline and consistent neutral lighting. Avoid interpreting shadows or weight changes as measured bone changes."
+        PresentationGoal.DOCUMENT -> "Keep this camera angle, lighting and distance for your next comparison. It'll be easier to see which styling changes you like."
+        PresentationGoal.MORE_LENGTH -> "Try a little more height in your hairstyle and less volume at the sides. See whether you prefer it; this changes presentation, not bones."
+        PresentationGoal.MORE_WIDTH -> "Try a little more width in your hairstyle, or compare wider glasses if you already have them. Keep the camera setup the same when comparing."
+        PresentationGoal.SOFTER_PRESENTATION -> "Try softer hair or beard outlines, or rounder frames if you wear glasses. Choose what feels right to you; there isn't one perfect face shape."
+        PresentationGoal.MORE_DEFINITION -> "Compare a tidier hair or beard outline in the same lighting. A different shadow doesn't mean your jaw bones changed."
     }
     return FaceReview.Measured(metrics, listOf(
         styleOption,
-        "Choose one reversible styling change at a time and record what you prefer in comparable photos.",
+        "Change one thing at a time. Notice what you prefer before trying something else.",
         "These are apparent 2D surface proportions. A photo cannot establish hidden facial bones, exact anatomy, or a scientifically objective PSL rating.",
     ))
 }

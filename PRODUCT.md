@@ -12,7 +12,7 @@ Delegated by the user: native Kotlin and Jetpack Compose with Material 3. Room f
 
 ## Users and purpose
 
-Initially the owner, improving skin, hair, facial presentation, and physique with distinct specialist coaching segments, private photo reviews, and measurable routines. Workouts, steps, nutrition, products, and habit tracking support that appearance-coaching purpose. Other people may install independent copies and exchange routine packs. Success means actionable, personalized priorities grounded in actual observations and records, with useful private progress history.
+Ordinary people improving skin, hair, facial presentation and fitness through clear guidance and manageable routines. No technical knowledge or AI setup should be needed. Workouts, steps, nutrition, products and habits support that purpose. Independent copies can exchange routine files. Success means useful next actions grounded in real records and personal preferences, with private progress history.
 
 ## Confirmed constraints
 
@@ -26,7 +26,7 @@ Initially the owner, improving skin, hair, facial presentation, and physique wit
 - Hevy remains the workout logger; import its exports/shared text without paid API access.
 - Import personal reference content from Notion or Obsidian/files. Routine definitions must also be editable inside Aesthory.
 - Private progress pictures, exportable/importable habits, and optional AI organization/reviews.
-- Modern, minimal interface. Extensive detail belongs beneath simple daily controls.
+- Engaging, interactive interface for ordinary people; the user explicitly rejected bland minimalism and technical language. Useful built-in rules/guides from first launch; AI is an optional extra, never a model-import prerequisite. Extensive technical detail belongs in advanced settings.
 
 ## Routine organization
 
@@ -85,7 +85,7 @@ Setup includes optional Groq enablement, masked key entry, a Get API key button 
 
 ## Proposed navigation
 
-Today; Coaches; Routines; Progress. Library (products/references/packs) is accessible within routines/coaches and from search; settings/profile from the top app bar. Coaches opens the five specialist segments and photo-review entry point. This is a revised implementation proposal based on the appearance-first direction, not a finished visual design.
+Current navigation: Today, Coach, Routines, You. Coach holds built-in searchable guides and a separate photo-check action. Technical AI options are collapsed under You. Products, references and persistent progress are later additions, not empty working destinations.
 
 ## Evidence and open decisions
 

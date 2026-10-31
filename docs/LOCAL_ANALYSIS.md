@@ -24,6 +24,8 @@ No objective PSL score, hidden-bone dimensions, maxillary projection, skeletal d
 
 ## Optional offline text model
 
+Everyday coaching now uses built-in rules and guides, with no extra model needed. Today suggests among the first unfinished actions of each routine, preserving their order, and uses known duration without inventing missing estimates. Searchable care/style/forum guides and starter routines are included. Extra offline AI lives under You → Extra AI tools → Advanced; it remains experimental. Numerical photo details are collapsed beneath plain-language next steps.
+
 LiteRT-LM Android 0.19.0, CPU backend, 2048-token context, maximum 512 output tokens, thinking disabled. Import one trusted CPU-compatible `.litertlm` file in Profile. No automatic download, account or usage billing. Stream into private storage, cap at 5 GiB, check free space/container magic/major version, hash SHA-256, initialize the temporary file with the runtime, then atomically replace the existing file. Failure/cancellation before replacement preserves the previous file. Native initialization may take time; immediate cancellation is not promised. Removing weights leaves landmarks/routines usable.
 
 Only common policy, selected facial specialist, goal and measured text enter this local text model. The photo is not supplied. Result is a separate coaching draft. Current photo/report/draft state is not a persistent journal. No weight training or model-specific quality evaluation has occurred.

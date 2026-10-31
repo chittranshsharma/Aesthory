@@ -41,6 +41,40 @@ class AesthoryRepositoryTest {
     }
     @After fun closeDatabase() { db.close() }
 
+    @Test fun `routine packs import independently and repeated imports do not duplicate or copy history`() = runBlocking {
+        val original = repository.addStarter(app.aesthory.coaching.StarterRoutines.all.first(), day)
+        val originalHabit = repository.habits(original).first().first()
+        repository.recordCompletion(originalHabit.definition.habitId, day, CompletionInput(CompletionStatus.DONE))
+        val pack = repository.exportRoutine(original)
+        val imported = repository.importRoutine(pack)
+        assertNotEquals(original, imported)
+        assertEquals(imported, repository.importRoutine(pack))
+        assertEquals(2, repository.routines.first().size)
+        assertEquals(1, repository.categories.first().size)
+        val copyHabit = repository.habits(imported).first().first()
+        assertTrue(repository.history(copyHabit.definition.habitId).isEmpty())
+        repository.editHabit(copyHabit.definition.habitId, HabitDraft("Changed copy", copyHabit.definition.categoryId, HabitSchedule(day)))
+        assertEquals(originalHabit.definition.title, repository.definition(originalHabit.definition.habitId, 1)!!.title)
+        assertEquals(pack, repository.exportRoutine(original))
+    }
+
+    @Test fun `starter addition is atomic and repeat taps preserve existing history`() = runBlocking {
+        val starter = app.aesthory.coaching.StarterRoutines.all.first()
+        val id = repository.addStarter(starter, day)
+        val habits = repository.habits(id).first()
+        assertEquals(starter.steps.size, habits.size)
+        repository.recordCompletion(habits.first().definition.habitId, day, CompletionInput(CompletionStatus.DONE))
+        assertEquals(id, repository.addStarter(starter, day.plusDays(1)))
+        assertEquals(1, repository.routines.first().size)
+        assertEquals(starter.steps.size, repository.habits(id).first().size)
+        assertEquals(CompletionStatus.DONE, repository.today(day).first().first().event!!.status)
+        repository.archiveRoutine(id)
+        assertTrue(repository.routines.first().isEmpty())
+        repository.addStarter(starter, day)
+        assertEquals(id, repository.routines.first().single().id)
+        assertEquals(CompletionStatus.DONE, repository.today(day).first().first().event!!.status)
+    }
+
     @Test fun `profile and measurements survive closing and reopening a file database`() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "profile-reopen-test.db"

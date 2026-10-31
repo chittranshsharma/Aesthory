@@ -1,0 +1,347 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-31T16:58:37.523696+00:00",
+  "title": "Design System: Aesthory",
+  "extensions": {
+    "colorMeta": {
+      "light-primary": {
+        "role": "primary",
+        "displayName": "Light Primary"
+      },
+      "light-on-primary": {
+        "role": "primary",
+        "displayName": "Light On Primary"
+      },
+      "light-primary-container": {
+        "role": "primary",
+        "displayName": "Light Primary Container"
+      },
+      "light-on-primary-container": {
+        "role": "primary",
+        "displayName": "Light On Primary Container"
+      },
+      "light-secondary": {
+        "role": "secondary",
+        "displayName": "Light Secondary"
+      },
+      "light-on-secondary": {
+        "role": "secondary",
+        "displayName": "Light On Secondary"
+      },
+      "light-secondary-container": {
+        "role": "secondary",
+        "displayName": "Light Secondary Container"
+      },
+      "light-on-secondary-container": {
+        "role": "secondary",
+        "displayName": "Light On Secondary Container"
+      },
+      "light-tertiary": {
+        "role": "tertiary",
+        "displayName": "Light Tertiary"
+      },
+      "light-on-tertiary": {
+        "role": "tertiary",
+        "displayName": "Light On Tertiary"
+      },
+      "light-tertiary-container": {
+        "role": "tertiary",
+        "displayName": "Light Tertiary Container"
+      },
+      "light-on-tertiary-container": {
+        "role": "tertiary",
+        "displayName": "Light On Tertiary Container"
+      },
+      "light-background": {
+        "role": "neutral",
+        "displayName": "Light Background"
+      },
+      "light-on-background": {
+        "role": "neutral",
+        "displayName": "Light On Background"
+      },
+      "light-surface": {
+        "role": "neutral",
+        "displayName": "Light Surface"
+      },
+      "light-on-surface": {
+        "role": "neutral",
+        "displayName": "Light On Surface"
+      },
+      "light-surface-variant": {
+        "role": "neutral",
+        "displayName": "Light Surface Variant"
+      },
+      "light-on-surface-variant": {
+        "role": "neutral",
+        "displayName": "Light On Surface Variant"
+      },
+      "light-surface-container": {
+        "role": "neutral",
+        "displayName": "Light Surface Container"
+      },
+      "light-surface-container-low": {
+        "role": "neutral",
+        "displayName": "Light Surface Container Low"
+      },
+      "light-surface-container-lowest": {
+        "role": "neutral",
+        "displayName": "Light Surface Container Lowest"
+      },
+      "light-surface-container-high": {
+        "role": "neutral",
+        "displayName": "Light Surface Container High"
+      },
+      "light-surface-container-highest": {
+        "role": "neutral",
+        "displayName": "Light Surface Container Highest"
+      },
+      "light-outline": {
+        "role": "neutral",
+        "displayName": "Light Outline"
+      },
+      "light-outline-variant": {
+        "role": "neutral",
+        "displayName": "Light Outline Variant"
+      },
+      "light-surface-tint": {
+        "role": "neutral",
+        "displayName": "Light Surface Tint"
+      },
+      "dark-primary": {
+        "role": "primary",
+        "displayName": "Dark Primary"
+      },
+      "dark-on-primary": {
+        "role": "primary",
+        "displayName": "Dark On Primary"
+      },
+      "dark-primary-container": {
+        "role": "primary",
+        "displayName": "Dark Primary Container"
+      },
+      "dark-on-primary-container": {
+        "role": "primary",
+        "displayName": "Dark On Primary Container"
+      },
+      "dark-secondary": {
+        "role": "secondary",
+        "displayName": "Dark Secondary"
+      },
+      "dark-on-secondary": {
+        "role": "secondary",
+        "displayName": "Dark On Secondary"
+      },
+      "dark-secondary-container": {
+        "role": "secondary",
+        "displayName": "Dark Secondary Container"
+      },
+      "dark-on-secondary-container": {
+        "role": "secondary",
+        "displayName": "Dark On Secondary Container"
+      },
+      "dark-tertiary": {
+        "role": "tertiary",
+        "displayName": "Dark Tertiary"
+      },
+      "dark-on-tertiary": {
+        "role": "tertiary",
+        "displayName": "Dark On Tertiary"
+      },
+      "dark-tertiary-container": {
+        "role": "tertiary",
+        "displayName": "Dark Tertiary Container"
+      },
+      "dark-on-tertiary-container": {
+        "role": "tertiary",
+        "displayName": "Dark On Tertiary Container"
+      },
+      "dark-background": {
+        "role": "neutral",
+        "displayName": "Dark Background"
+      },
+      "dark-on-background": {
+        "role": "neutral",
+        "displayName": "Dark On Background"
+      },
+      "dark-surface": {
+        "role": "neutral",
+        "displayName": "Dark Surface"
+      },
+      "dark-on-surface": {
+        "role": "neutral",
+        "displayName": "Dark On Surface"
+      },
+      "dark-surface-variant": {
+        "role": "neutral",
+        "displayName": "Dark Surface Variant"
+      },
+      "dark-on-surface-variant": {
+        "role": "neutral",
+        "displayName": "Dark On Surface Variant"
+      },
+      "dark-surface-container": {
+        "role": "neutral",
+        "displayName": "Dark Surface Container"
+      },
+      "dark-surface-container-low": {
+        "role": "neutral",
+        "displayName": "Dark Surface Container Low"
+      },
+      "dark-surface-container-lowest": {
+        "role": "neutral",
+        "displayName": "Dark Surface Container Lowest"
+      },
+      "dark-surface-container-high": {
+        "role": "neutral",
+        "displayName": "Dark Surface Container High"
+      },
+      "dark-surface-container-highest": {
+        "role": "neutral",
+        "displayName": "Dark Surface Container Highest"
+      },
+      "dark-outline": {
+        "role": "neutral",
+        "displayName": "Dark Outline"
+      },
+      "dark-outline-variant": {
+        "role": "neutral",
+        "displayName": "Dark Outline Variant"
+      },
+      "dark-surface-tint": {
+        "role": "neutral",
+        "displayName": "Dark Surface Tint"
+      }
+    },
+    "typographyMeta": {
+      "display-large": {
+        "displayName": "Display Large",
+        "purpose": "Native Material role; Barlow Condensed bold override only. Size, line height and tracking inherit pinned Material defaults."
+      },
+      "display-medium": {
+        "displayName": "Display Medium",
+        "purpose": "Native Material role; Barlow Condensed bold override only. Size, line height and tracking inherit pinned Material defaults."
+      },
+      "display-small": {
+        "displayName": "Display Small",
+        "purpose": "Native Material role; Barlow Condensed bold override only. Size, line height and tracking inherit pinned Material defaults."
+      },
+      "headline-large": {
+        "displayName": "Headline Large",
+        "purpose": "Native Material role; Barlow Condensed bold override only. Size, line height and tracking inherit pinned Material defaults."
+      },
+      "headline-medium": {
+        "displayName": "Headline Medium",
+        "purpose": "Native Material role; Barlow Condensed bold override only. Size, line height and tracking inherit pinned Material defaults."
+      },
+      "headline-small": {
+        "displayName": "Headline Small",
+        "purpose": "Native Material role; Barlow Condensed bold override only. Size, line height and tracking inherit pinned Material defaults."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [],
+    "native": {
+      "platform": "Android Compose / Material 3",
+      "units": "dp for layout; sp for inherited Material text sizes",
+      "previewPolicy": "No HTML/CSS approximations: the implementation is native Android. components contains native metadata; no browser-renderable snippets are asserted.",
+      "colorPolicy": "Explicit day/night semantic palettes are in DESIGN.md frontmatter; no app tonal ramps are defined.",
+      "motionPolicy": "animateContentSize and Material interaction defaults; Confirm haptic on successful completion; no explicit app duration/easing tokens.",
+      "sources": [
+        "app/src/main/kotlin/app/aesthory/ui/AesthoryTheme.kt",
+        "app/src/main/kotlin/app/aesthory/ui/EverydayScreens.kt",
+        "app/src/main/kotlin/app/aesthory/ui/AesthoryRoot.kt"
+      ],
+      "components": [
+        {
+          "name": "Primary action",
+          "kind": "button",
+          "compose": "Button",
+          "description": "Native Material primary/on-primary; busy state disables mutation."
+        },
+        {
+          "name": "Tonal action",
+          "kind": "button",
+          "compose": "FilledTonalButton",
+          "description": "Native Material tonal action; photo entry fills width with minimum 56 dp height."
+        },
+        {
+          "name": "Outlined action",
+          "kind": "button",
+          "compose": "OutlinedButton",
+          "description": "Native Material outlined secondary action, including routine import."
+        },
+        {
+          "name": "Text action",
+          "kind": "button",
+          "compose": "TextButton",
+          "description": "Native Material low-emphasis action for expansion and supplementary navigation."
+        },
+        {
+          "name": "Labeled field",
+          "kind": "input",
+          "compose": "OutlinedTextField",
+          "description": "Persistent visible label; native focus/error states, masked key variant."
+        },
+        {
+          "name": "Bottom destinations",
+          "kind": "nav",
+          "compose": "NavigationBar / NavigationBarItem",
+          "description": "Today, Coach, Routines, You; native selected indicator, labels and vector icons."
+        },
+        {
+          "name": "Topic filter",
+          "kind": "chip",
+          "compose": "FilterChip",
+          "description": "Native selected/unselected treatment, wrapping 8 dp gaps, minimum 48 dp height."
+        },
+        {
+          "name": "Daily plan",
+          "kind": "card",
+          "compose": "Card",
+          "description": "Active primary/on-primary, medium shape, 20 dp padding, actual progress and inverse button."
+        }
+      ]
+    }
+  },
+  "components": [],
+  "narrative": {
+    "northStar": "The Personal Training Club",
+    "overview": "A friendly personal training-club companion: bold condensed headings, cobalt action panels, coral and mint starter ideas, and readable native controls. The personality is energetic and approachable; everyday language and usable guidance come before optional AI configuration.",
+    "keyCharacteristics": [
+      "Colorful Material surfaces with explicit light and dark palettes.",
+      "Condensed display type paired with system body text.",
+      "Real daily progress, short actions, expandable detail."
+    ],
+    "rules": [
+      {
+        "name": "The Paired Roles Rule",
+        "body": "Use each Material container with its corresponding on-color in the active theme; do not paste light-theme colors into dark screens.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "Use Barlow Condensed bold for display/headline roles and the unchanged Material system styles for titles, body copy and controls.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal Grouping Rule",
+        "body": "Use colored containers for a distinct plan or starter group; use rows and dividers for repeated actions and guides.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use semantic Material roles and the system-selected light or dark theme.",
+      "Do keep guide titles wrapping and preserve space for the Read/Close action.",
+      "Do show real completion counts and clear, reversible actions.",
+      "Do keep advanced AI and numeric photo detail collapsed until requested."
+    ],
+    "donts": [
+      "Don't restore the retired ivory/forest minimal identity or old Analyze/Profile destination labels.",
+      "Don't introduce fictional scores, streaks or decorative dashboard metrics.",
+      "Don't make model setup a prerequisite for the daily plan, guides or local photo check.",
+      "Don't translate dp/sp into CSS pixels or claim the documentation proves accessibility or hardware performance."
+    ]
+  }
+}

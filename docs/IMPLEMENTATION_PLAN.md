@@ -18,7 +18,7 @@ Build in this dependency order. Appearance coaching is the core; routines and tr
 
 ## 3. First UI: setup, Today, and AI settings — usable pilot
 
-- Establish the minimal premium Material 3 world; persist DESIGN.md and the first surface brief. Aesthory's name and appearance-first purpose are settled.
+- Revised per user feedback: engaging, colorful native Material 3, ordinary language, immediate built-in guidance and optional advanced AI settings. DESIGN.md and UI_BRIEF.md hold the direction.
 - Compose/ViewModel: resumable optional baseline setup, Today, routine list/basic editor and unconfigured states. Four tabs need no navigation library yet; add Navigation 3 when nested routes warrant it. Five focus choices are not five working chat screens.
 - Optional masked Groq key entry, Get API key browser link, Keystore-backed encryption, explicit connection test/model listing, replace/delete/disable, and quota/offline/errors. Add networking permission/libraries with this real feature.
 - No app email login. Provider authorization is separate; no unimplemented connector may appear working.
@@ -26,12 +26,16 @@ Build in this dependency order. Appearance coaching is the core; routines and tr
 
 ## 4. Sharing and recovery before extensive private data
 
+Routine JSON files implemented: explicit preview/save/import, bounded schema validation, transactional independent copies and repeated-import handling. Readable text export and full encrypted backup/restore remain next.
+
 - Versioned routine JSON packs and readable text; selected public product/reference details only. Exclude API keys, private photos, nutrition, and completion history by default.
 - Validate size/schema/IDs/links; preview; import atomically into independent copies with explicit duplicate/category handling.
 - Separate full backup: passphrase-based portable key derivation, authenticated encryption, attachment hashes/limits, validated restore, rollback. A device-only key cannot be the sole route to portable recovery.
 - Gate: round-trip packs/backups; test wrong passwords, tampering, future versions, duplicates, interrupted restore, exclusions, and no partial persisted state.
 
 ## 5. Specialist text coaching and knowledge
+
+Built-in rules, five starter routines and 11 searchable guides now work without a language model. Guide sources, forum terminology and procedure education are distinguished; procedure material is age-gated. This is a small curated library, not exhaustive forum knowledge or weight training. Hosted generation/retrieval evaluation below remains pending.
 
 - Load common policy plus one Skin/Hair/Face/Physique/Mentor prompt with small user-approved context; no five-model fan-out.
 - Curate licensed/attributed dermatology and training sources, dates, and evidence grades; small local full-text retrieval first. Forums remain anecdotal/untrusted.

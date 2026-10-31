@@ -1,6 +1,7 @@
 package app.aesthory.data
 
 import androidx.room.withTransaction
+import app.aesthory.coaching.StarterRoutine
 import app.aesthory.profile.BodyMeasurements
 import app.aesthory.profile.ProfileBaseline
 import app.aesthory.routines.CompletionInput
@@ -8,6 +9,8 @@ import app.aesthory.routines.CompletionStatus
 import app.aesthory.routines.HabitSchedule
 import app.aesthory.routines.HabitState
 import app.aesthory.routines.TrackingSettings
+import app.aesthory.routines.RoutinePack
+import app.aesthory.routines.PackHabit
 import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
@@ -62,6 +65,44 @@ class AesthoryRepository(private val db: AesthoryDatabase, private val clock: Cl
         val id = UUID.randomUUID().toString()
         dao.insertRoutine(RoutineEntity(id, name.trim(), clock.millis()))
         return id
+    }
+
+    suspend fun addStarter(starter: StarterRoutine, start: LocalDate): String = db.withTransaction {
+        val id = "starter:${starter.id}"
+        if (dao.getRoutine(id) != null) {
+            dao.restoreRoutine(id)
+            return@withTransaction id
+        }
+        val category = createCategory(starter.focus.displayName)
+        dao.insertRoutine(RoutineEntity(id, starter.name, clock.millis()))
+        starter.steps.forEach { step -> addHabit(id, HabitDraft(step.title, category, HabitSchedule(start), step.instructions, step.minutes)) }
+        id
+    }
+
+    suspend fun exportRoutine(id: String): RoutinePack = db.withTransaction {
+        val routine = requireNotNull(dao.getRoutine(id))
+        val categories = dao.getCategories().associateBy { it.id }
+        RoutinePack(routine.name, dao.getHabits(id).filter { it.state != HabitState.ARCHIVED }.map { habit ->
+            val definition = requireNotNull(dao.getVersion(habit.id, habit.currentVersion))
+            PackHabit(definition.title, requireNotNull(categories[definition.categoryId]).name, definition.instructions,
+                definition.estimatedMinutes, definition.schedule.toDomain(), definition.tracking)
+        })
+    }
+
+    suspend fun importRoutine(pack: RoutinePack): String = db.withTransaction {
+        val id = "pack:${pack.fingerprint}"
+        if (dao.getRoutine(id) != null) {
+            dao.restoreRoutine(id)
+            return@withTransaction id
+        }
+        val categories = dao.getCategories().associate { it.name.lowercase(java.util.Locale.ROOT) to it.id }.toMutableMap()
+        dao.insertRoutine(RoutineEntity(id, pack.name, clock.millis()))
+        pack.habits.forEach { habit ->
+            val category = categories[habit.category.lowercase(java.util.Locale.ROOT)]
+                ?: createCategory(habit.category).also { categories[habit.category.lowercase(java.util.Locale.ROOT)] = it }
+            addHabit(id, HabitDraft(habit.title, category, habit.schedule, habit.instructions, habit.minutes, habit.tracking))
+        }
+        id
     }
 
     suspend fun addHabit(routineId: String, draft: HabitDraft): String = db.withTransaction {

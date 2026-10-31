@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aesthory.coaching.GroqConnection
 import app.aesthory.coaching.OfflineCoach
+import app.aesthory.coaching.StarterRoutine
 import app.aesthory.data.AesthoryRepository
 import app.aesthory.data.HabitDraft
 import app.aesthory.data.ProfileEntity
@@ -16,6 +17,8 @@ import app.aesthory.profile.ProfileBaseline
 import app.aesthory.routines.CompletionInput
 import app.aesthory.routines.CompletionStatus
 import app.aesthory.routines.HabitSchedule
+import app.aesthory.routines.RoutineFiles
+import app.aesthory.routines.RoutinePack
 import app.aesthory.security.GroqKeyStore
 import java.time.LocalDate
 import kotlinx.coroutines.CancellationException
@@ -41,6 +44,8 @@ data class AppState(
     val offlineText: String? = null,
     val modelInstalled: Boolean = false,
     val keyConfigured: Boolean = false,
+    val packToShare: RoutinePack? = null,
+    val packToImport: RoutinePack? = null,
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -50,6 +55,7 @@ class MainViewModel(
     private val offline: OfflineCoach,
     private val keys: GroqKeyStore,
     private val groq: GroqConnection,
+    private val routineFiles: RoutineFiles,
 ) : ViewModel() {
     private val state = MutableStateFlow(AppState())
     val ui = state.asStateFlow()
@@ -68,10 +74,33 @@ class MainViewModel(
     fun clearMessage() { state.update { it.copy(message = null) } }
     fun saveProfile(profile: ProfileBaseline, onSaved: () -> Unit = {}) = action {
         repository.saveProfile(profile)
-        state.update { it.copy(message = "Profile saved on this device.") }
+        state.update { it.copy(message = "You're all set. Let's make it your own.") }
         onSaved()
     }
     fun createRoutine(name: String, onSaved: () -> Unit) = action { repository.createRoutine(name); onSaved() }
+    fun addStarter(starter: StarterRoutine) = action {
+        repository.addStarter(starter, date.value)
+        state.update { it.copy(message = "${starter.name} is ready in your routines.") }
+    }
+    fun archiveRoutine(id: String) = action { repository.archiveRoutine(id) }
+    fun setHabitState(id: String, habitState: app.aesthory.routines.HabitState) = action { repository.setHabitState(id, habitState) }
+    fun prepareShare(id: String) = action("That routine couldn't be prepared. Try a smaller routine with at least one action.") {
+        val pack = repository.exportRoutine(id)
+        state.update { it.copy(packToShare = pack) }
+    }
+    fun writePack(uri: Uri) = action("The routine file couldn't be saved. Choose a writable folder and try again.") {
+        routineFiles.write(uri, requireNotNull(state.value.packToShare))
+        state.update { it.copy(packToShare = null, message = "Routine file saved. You can send it using your Files app.") }
+    }
+    fun previewPack(uri: Uri) = action("That isn't a supported Aesthory routine file. Choose an exported routine file under 256 KB.") {
+        val pack = routineFiles.read(uri)
+        state.update { it.copy(packToImport = pack) }
+    }
+    fun importPack() = action("That routine couldn't be added. Your existing routines are still saved.") {
+        repository.importRoutine(requireNotNull(state.value.packToImport))
+        state.update { it.copy(packToImport = null, message = "Routine ready. Re-importing the same file won't add it twice.") }
+    }
+    fun dismissPacks() { state.update { it.copy(packToShare = null, packToImport = null) } }
     fun addHabit(routineId: String, title: String, instructions: String, minutes: Int?, onSaved: () -> Unit) = action {
         val category = repository.categories.first().firstOrNull()?.id
             ?: repository.createCategory("General")
@@ -124,17 +153,17 @@ class MainViewModel(
         }
     }
 
-    private fun action(block: suspend () -> Unit) {
+    private fun action(errorMessage: String? = null, block: suspend () -> Unit) {
         if (state.value.busy) return
         state.update { it.copy(busy = true, message = null) }
         work = viewModelScope.launch {
             try { block() }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (failure: Exception) {
-                val message = when (failure) {
+                val message = errorMessage ?: when (failure) {
                     is IllegalArgumentException -> "Check the entered values or selected file and try again."
                     is java.io.IOException -> "The file or connection could not be read. Your saved records are unchanged."
-                    else -> "This action could not finish. Check the file/model or connection and try again."
+                    else -> "We couldn't finish that. Check what you entered or try again in a moment."
                 }
                 state.update { it.copy(message = message) }
             } finally { state.update { it.copy(busy = false) } }

@@ -18,6 +18,7 @@ Android appearance-coaching app: skin, hair, facial aesthetics, physique, and pe
 - Hevy: file/text import first; its paid public API is outside scope.
 - Nutrition: local OCR → editable review → explicit save. Never invent missing values or add daily snapshots together.
 - Groq is optional cloud processing with the user's own key. Local history supplies memory. Tracking must work without it.
+- Built-in rules and shipped guides power everyday coaching. No model/key is required for starter routines, daily suggestions, guide search or face checks. Never present these rules as newly trained model weights.
 - Local facial analysis is a core path: bundled pretrained MediaPipe surface landmarks → aspect-correct pixel geometry → labeled presentation options. Optional imported LiteRT-LM weights add offline coaching. Never describe this as newly trained weights, hidden-bone reconstruction, or validated PSL scoring. Hardware target supplied by user: Android phone with 8 GB+ RAM; benchmark actual models before performance claims.
 - Specialist prompts + cited knowledge retrieval are configuration, not weight training. Photo reviews need per-request image consent and a vision-capable available model; no silent text-model fallback. Direct coaching may use forum vocabulary, never present anecdotes as clinical evidence.
 - Support routine-pack sharing and separate full backups. Exclude secrets and private history from routine packs.
@@ -33,7 +34,7 @@ Android appearance-coaching app: skin, hair, facial aesthetics, physique, and pe
 - No destructive migrations, silent data loss, fabricated objective PSL scores, inferred hidden bone anatomy, or AI medical diagnoses.
 
 ## UI and performance
-- Minimal native Android UI, useful empty/error/offline/permission states, one clear primary action.
+- Engaging, approachable native Android UI for ordinary people; bold color and clear everyday language. Minimalism is no longer a user constraint. Built-in guidance works immediately; optional AI/model configuration belongs in advanced settings. Use useful empty/error/offline/permission states and one clear primary action.
 - Material roles, light/dark themes, 48 dp touch targets, scalable text, TalkBack, system Back, and reduced motion.
 - Collapse advanced editor fields; keep everyday completion fast. No fake working controls or unlabeled demo data.
 - Keep OCR, parsing, images, and database work off the main thread. Use lazy lists, bounded caches, and thumbnails. Background work is not an exact timer.

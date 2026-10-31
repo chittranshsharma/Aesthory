@@ -4,15 +4,17 @@ An Android appearance coach for facial aesthetics, skin, hair and physique, supp
 
 ## Usable development build
 
+- Built-in coaching from first launch: five starter routines, next-action suggestions and 11 searchable care/style/looksmaxing guides. No model download or API key needed.
 - No-email setup and optional dated baseline measurements.
 - Persistent routines, daily habits, instructions, estimated duration, completion and undo.
 - On-device landmarks, recapture feedback and six apparent facial-proportion measurements. Reversible styling options follow your chosen goal.
-- Optional imported LiteRT-LM text model for separate offline drafts; optional encrypted Groq key with connection test.
-- Native Today/Analyze/Routines/Profile, light/dark themes and scalable text.
+- Routine JSON files: preview, save and import independent copies without private history; repeated imports are detected.
+- Extra LiteRT-LM imports and Groq key settings are optional advanced tools. Groq currently tests connection only; extra language-model weights remain unevaluated.
+- Colorful native Today/Coach/Routines/You screens, clear everyday language, one-tap check-ins, light/dark themes and scalable text.
 
 The bundled face model is pretrained MediaPipe, not a newly trained PSL or facial-bone model. Selfie proportions are not hidden skeletal measurements or clinical findings. Optional language-model weights are not included, downloaded automatically or quality-validated yet. Photo preview is temporary; a persistent progress-photo journal is planned.
 
-Health Connect/Google Health, nutrition OCR, Hevy, sharing/backups, products/references, specialist retrieval and Notion/Obsidian are subsequent milestones, not active integrations. See [actual status](docs/STATUS.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
+Health Connect/Google Health, nutrition OCR, Hevy, full backups, products/references, broader specialist retrieval and Notion/Obsidian are subsequent milestones, not active integrations. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
 
 ## Build and run
 
@@ -36,4 +38,4 @@ Read [AGENTS.md](AGENTS.md), then [STATUS.md](docs/STATUS.md); load task-specifi
 
 ## Third-party artifacts
 
-Gradle wrapper v9.4.1 is verified against upstream SHA-256; Apache-2.0 license is in `gradle/wrapper/LICENSE`. The official pretrained landmark bundle has license/source/SHA in `app/src/main/assets/models/`. Optional model licenses depend on selected weights. Application code is original; official examples are references, not copied apps. No application license/distribution channel has been selected.
+Gradle wrapper v9.4.1 is verified against upstream SHA-256; Apache-2.0 license is in `gradle/wrapper/LICENSE`. The official pretrained landmark bundle has license/source/SHA in `app/src/main/assets/models/`. Barlow Condensed bold is bundled from Google Fonts under SIL OFL, retained in `app/src/main/assets/licenses/Barlow-OFL.txt`. Optional model licenses depend on selected weights. Application code is original; official examples are references, not copied apps. No application license/distribution channel has been selected.

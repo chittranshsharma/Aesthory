@@ -34,17 +34,19 @@ interface AesthoryDao {
     @Query("SELECT * FROM measurements ORDER BY recordedAtMillis DESC, id DESC") fun observeMeasurements(): Flow<List<MeasurementEntity>>
     @Insert suspend fun insertCategory(category: CategoryEntity)
     @Query("SELECT * FROM categories ORDER BY name") fun observeCategories(): Flow<List<CategoryEntity>>
+    @Query("SELECT * FROM categories ORDER BY name") suspend fun getCategories(): List<CategoryEntity>
     @Insert suspend fun insertRoutine(routine: RoutineEntity)
     @Query("SELECT * FROM routines WHERE archived = 0 ORDER BY createdAtMillis, id") fun observeRoutines(): Flow<List<RoutineEntity>>
     @Query("UPDATE routines SET archived = 1 WHERE id = :id") suspend fun archiveRoutine(id: String)
+    @Query("UPDATE routines SET archived = 0 WHERE id = :id") suspend fun restoreRoutine(id: String)
     @Query("SELECT * FROM routines WHERE id = :id") suspend fun getRoutine(id: String): RoutineEntity?
     @Insert suspend fun insertHabit(habit: HabitEntity)
     @Insert suspend fun insertVersion(version: HabitVersionEntity)
     @Query("SELECT * FROM habits WHERE id = :id") suspend fun getHabit(id: String): HabitEntity?
     @Query("SELECT * FROM habits WHERE routineId = :routineId ORDER BY position, id") suspend fun getHabits(routineId: String): List<HabitEntity>
-    @Query("SELECT v.*, h.position, h.state FROM habit_versions v JOIN habits h ON v.habitId = h.id AND v.version = h.currentVersion WHERE h.routineId = :routineId ORDER BY h.position, h.id")
+    @Query("SELECT v.*, h.position, h.state, h.routineId FROM habit_versions v JOIN habits h ON v.habitId = h.id AND v.version = h.currentVersion WHERE h.routineId = :routineId ORDER BY h.position, h.id")
     fun observeCurrentHabits(routineId: String): Flow<List<CurrentHabit>>
-    @Query("SELECT v.*, h.position, h.state FROM habit_versions v JOIN habits h ON v.habitId = h.id AND v.version = h.currentVersion JOIN routines r ON h.routineId = r.id WHERE h.state = 'ACTIVE' AND r.archived = 0 ORDER BY r.createdAtMillis, h.position")
+    @Query("SELECT v.*, h.position, h.state, h.routineId FROM habit_versions v JOIN habits h ON v.habitId = h.id AND v.version = h.currentVersion JOIN routines r ON h.routineId = r.id WHERE h.state = 'ACTIVE' AND r.archived = 0 ORDER BY r.createdAtMillis, r.id, h.position, h.id")
     fun observeActiveHabits(): Flow<List<CurrentHabit>>
     @Query("SELECT * FROM habit_versions WHERE habitId = :habitId AND version = :version") suspend fun getVersion(habitId: String, version: Int): HabitVersionEntity?
     @Query("UPDATE habits SET currentVersion = :version WHERE id = :id") suspend fun setVersion(id: String, version: Int)
