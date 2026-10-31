@@ -14,8 +14,8 @@ android {
         applicationId = "app.aesthory"
         minSdk = 28
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -24,6 +24,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures { compose = true }
+    sourceSets.getByName("test").resources.srcDir("schemas")
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.all { it.maxHeapSize = "1g" }
@@ -50,6 +51,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.mediapipe.vision)
     implementation(libs.litertlm)
+    implementation(libs.tink)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)

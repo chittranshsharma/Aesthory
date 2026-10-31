@@ -51,12 +51,17 @@ fun AesthoryRoot(model: MainViewModel) {
     val state by model.ui.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var photoReview by rememberSaveable { mutableStateOf(false) }
+    var recovery by rememberSaveable { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(state.message) {
-        state.message?.let { snackbar.showSnackbar(it, actionLabel = "Dismiss"); model.clearMessage() }
+        state.message?.let {
+            val undo = state.undoPhotoId != null && it == "Photo moved to Recently deleted."
+            val result = snackbar.showSnackbar(it, actionLabel = if (undo) "Undo" else "Dismiss")
+            if (undo && result == SnackbarResult.ActionPerformed) model.undoPhoto() else model.clearMessage()
+        }
     }
     AesthoryTheme {
-        BackHandler(tab != 0) { if (tab == 1 && photoReview) photoReview = false else tab = 0 }
+        BackHandler(tab != 0 || recovery) { if (recovery) recovery = false else if (tab == 1 && photoReview) photoReview = false else tab = 0 }
         Scaffold(
             snackbarHost = { SnackbarHost(snackbar) },
             topBar = { TopAppBar(title = { Text(if (state.profile == null) "Aesthory" else listOf("Today", "Coach", "Routines", "You")[tab]) }) },
@@ -77,11 +82,12 @@ fun AesthoryRoot(model: MainViewModel) {
             Column(Modifier.fillMaxSize().padding(padding)) {
                 if (state.busy) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
-                    TextButton(onClick = model::cancelWork, modifier = Modifier.align(Alignment.End)) { Text("Cancel action") }
+                    TextButton(enabled = state.canCancel, onClick = model::cancelWork, modifier = Modifier.align(Alignment.End)) { Text(if (state.canCancel) "Cancel action" else "Finishing safely…") }
                 }
                 when {
                     !state.loaded -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    state.profile == null -> BaselineForm(null, model, state.busy)
+                    recovery -> BackupScreen(model) { recovery = false; tab = 0 }
+                    state.profile == null -> BaselineForm(null, model, state.busy, onRestore = { recovery = true })
                     tab == 0 -> TodayScreen(model, onRoutines = { tab = 2 }, onAnalyze = { tab = 1; photoReview = true })
                     tab == 1 -> if (photoReview) AnalyzeScreen(model) { photoReview = false } else CoachScreen(model) { photoReview = true }
                     tab == 2 -> RoutinesScreen(model)
@@ -89,6 +95,7 @@ fun AesthoryRoot(model: MainViewModel) {
                 }
             }
         }
+        PhotoDetailsDialog(model)
     }
 }
 
@@ -105,7 +112,7 @@ internal fun Page(content: @Composable ColumnScope.() -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BaselineForm(profile: ProfileEntity?, model: MainViewModel, busy: Boolean) {
+private fun BaselineForm(profile: ProfileEntity?, model: MainViewModel, busy: Boolean, onRestore: (() -> Unit)? = null) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     BackHandler(profile == null && step > 0) { step = 0 }
     var name by rememberSaveable(profile?.id) { mutableStateOf(profile?.displayName.orEmpty()) }
@@ -174,6 +181,7 @@ private fun BaselineForm(profile: ProfileEntity?, model: MainViewModel, busy: Bo
         }
         if (profile == null && step == 0) {
             Button(onClick = { step = 1 }, modifier = Modifier.fillMaxWidth()) { Text("Continue") }
+            onRestore?.let { TextButton(enabled = !busy, onClick = it) { Text("I have a backup to restore") } }
         } else {
         if (profile == null) TextButton(onClick = { step = 0 }) { Text("Back to focus") }
         Button(
@@ -366,6 +374,7 @@ private fun AnalyzeScreen(model: MainViewModel, onBack: () -> Unit) {
         Text("Use an unfiltered front photo, level camera, neutral expression and even lighting. Leave space around the full face.", style = MaterialTheme.typography.bodyMedium)
         state.photo?.let { photo ->
             Image(photo.bitmap.asImageBitmap(), contentDescription = "Selected photo for local analysis", modifier = Modifier.fillMaxWidth().heightIn(max = 340.dp))
+            FilledTonalButton(enabled = !state.busy, onClick = model::beginAnalyzedPhoto) { Text("Keep as a progress photo") }
             when (val review = photo.review) {
                 is FaceReview.Recapture -> {
                     Text("One quick photo tip", style = MaterialTheme.typography.titleLarge)
@@ -419,10 +428,16 @@ private fun ProfileScreen(model: MainViewModel) {
     val measurements by model.measurements.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var editing by rememberSaveable { mutableStateOf(false) }
+    var section by rememberSaveable { mutableStateOf<String?>(null) }
     var extras by rememberSaveable { mutableStateOf(false) }
     var local by rememberSaveable { mutableStateOf(false) }
     var key by remember { mutableStateOf("") }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) model.importModel(uri) }
+    if (section != null) {
+        BackHandler { section = null }
+        if (section == "photos") ProgressScreen(model) { section = null } else BackupScreen(model) { section = null }
+        return
+    }
     if (editing) {
         BackHandler { editing = false }
         Column {
@@ -441,6 +456,8 @@ private fun ProfileScreen(model: MainViewModel) {
             }
         }
         Button(onClick = { editing = true }) { Text("About you & your goals") }
+        FilledTonalButton(onClick = { section = "photos" }) { Text("My progress photos") }
+        OutlinedButton(onClick = { section = "backup" }) { Text("Backup & restore") }
         measurements.firstOrNull()?.let { latest ->
             SectionHeading("Your measurements")
             latest.values.heightCm?.let { Text("Height: $it cm") }
@@ -473,7 +490,7 @@ private fun ProfileScreen(model: MainViewModel) {
         }
         HorizontalDivider()
         SectionHeading("Your privacy")
-        Text("Your routines and measurements stay on this phone. Photo checks run here too. The current photo preview disappears when the app closes; it isn't a saved progress photo.")
-        Text("Backup and recovery are still being built. Uninstalling the app deletes its saved records.", style = MaterialTheme.typography.bodySmall)
+        Text("Your routines, measurements and saved progress photos stay in this app. Photo checks run on your phone too. Save a photo to your journal if you want to keep it.")
+        Text("Use Backup & restore to save a password-protected copy elsewhere. Uninstalling removes data from this app; keep a backup and its password if you want to recover it.", style = MaterialTheme.typography.bodySmall)
     }
 }

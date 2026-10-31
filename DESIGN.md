@@ -181,6 +181,8 @@ Medium and large Material shapes share softly rounded corners (16 dp); extra-lar
 - **Navigation:** Labeled native bottom bar: Today, Coach, Routines, You, with vector icons and Material selected indicator. Top app bar repeats the current destination. Back from another destination returns toward Today; the photo check returns to Coach.
 - **Guide rows:** Full-width TextButton, 12 dp padding, wrapping weighted title column, trailing Read/Close action with 12 dp start spacing; summary, actions and sources expand below a divider.
 - **Daily progress:** Actual completed/total counts and a linear indicator; the on-primary track uses 25% alpha. Completion updates the panel and may reveal the next action.
+- **Private photo journal:** A lazy vertical list uses the existing page spacing, with 16 dp card padding and fitted photo previews. Date, area and view identify each entry; labeled checkboxes select at most two matching area/view photos. Comparison switches Earlier/Later around one fitted image. The scrollable photo-details dialog shows the selected image, date action, wrapping area/view chips and optional note before explicit save. Recently deleted provides recovery; permanent deletion requires confirmation.
+- **Backup and restore:** Native scrollable AlertDialogs keep password guidance and masked, labeled fields together; creation asks for confirmation and shows a mismatch error. Prepare/Check stays disabled until valid. Restore preview shows the backup date, real counts and replacement consequences before the explicit Replace & restore action, with Keep current data alongside it. Mutation actions disable during work and restoration shows progress. Back labels name You or setup according to the entry path.
 
 ## Do's and Don'ts
 
@@ -196,4 +198,4 @@ Medium and large Material shapes share softly rounded corners (16 dp); extra-lar
 - **Don't** make model setup a prerequisite for the daily plan, guides or local photo check.
 - **Don't** translate dp/sp into CSS pixels or claim the documentation proves accessibility or hardware performance.
 
-Source of truth: `AesthoryTheme.kt`, `EverydayScreens.kt` and `AesthoryRoot.kt` under `app/src/main/kotlin/app/aesthory/ui/`; direction: `docs/UI_BRIEF.md`. Native behavior remains authoritative. `.impeccable/design.json` contains extensions and native component metadata, not web renderings. Documentation does not establish clinical validity, model speed or comprehensive accessibility verification.
+Source of truth: `AesthoryTheme.kt`, `EverydayScreens.kt`, `AesthoryRoot.kt`, `ProgressScreen.kt` and `BackupScreen.kt` under `app/src/main/kotlin/app/aesthory/ui/`; direction: `docs/UI_BRIEF.md`. Native behavior remains authoritative. `.impeccable/design.json` contains extensions and native component metadata, not web renderings. Documentation does not establish clinical validity, model speed or comprehensive accessibility verification.

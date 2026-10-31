@@ -8,6 +8,7 @@ import app.aesthory.data.AesthoryRepository
 import app.aesthory.face.LocalFaceAnalyzer
 import app.aesthory.security.GroqKeyStore
 import app.aesthory.routines.RoutineFiles
+import app.aesthory.backup.PersonalVault
 
 class AesthoryApplication : Application() {
     private val database by lazy { AesthoryDatabase.open(this) }
@@ -17,4 +18,5 @@ class AesthoryApplication : Application() {
     val keys by lazy { GroqKeyStore(this) }
     val groq by lazy { GroqConnection(keys) }
     val routineFiles by lazy { RoutineFiles(this) }
+    val vault by lazy { PersonalVault(this, database) }
 }

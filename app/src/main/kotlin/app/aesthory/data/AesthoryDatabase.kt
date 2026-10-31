@@ -10,6 +10,10 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Upsert
+import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import app.aesthory.progress.ProgressPhoto
 import app.aesthory.coaching.CoachMode
 import app.aesthory.routines.HabitState
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +31,18 @@ class DatabaseConverters {
 
 @Dao
 interface AesthoryDao {
+    @Query("SELECT * FROM progress_photos ORDER BY day DESC, createdAtMillis DESC, id") fun observePhotos(): Flow<List<ProgressPhoto>>
+    @Query("SELECT * FROM progress_photos") suspend fun allPhotos(): List<ProgressPhoto>
+    @Insert suspend fun insertPhoto(photo: ProgressPhoto)
+    @Update suspend fun updatePhoto(photo: ProgressPhoto)
+    @Query("UPDATE progress_photos SET deletedAtMillis = :at WHERE id = :id") suspend fun setPhotoDeleted(id: String, at: Long?)
+    @Query("DELETE FROM progress_photos WHERE id = :id") suspend fun deletePhoto(id: String)
+    @Query("SELECT * FROM profiles") suspend fun allProfiles(): List<ProfileEntity>
+    @Query("SELECT * FROM measurements") suspend fun allMeasurements(): List<MeasurementEntity>
+    @Query("SELECT * FROM routines") suspend fun allRoutines(): List<RoutineEntity>
+    @Query("SELECT * FROM habits") suspend fun allHabits(): List<HabitEntity>
+    @Query("SELECT * FROM habit_versions") suspend fun allVersions(): List<HabitVersionEntity>
+    @Query("SELECT * FROM completion_events") suspend fun allEvents(): List<CompletionEventEntity>
     @Upsert suspend fun saveProfile(profile: ProfileEntity)
     @Query("SELECT * FROM profiles WHERE id = 1") fun observeProfile(): Flow<ProfileEntity?>
     @Query("SELECT * FROM profiles WHERE id = 1") suspend fun getProfile(): ProfileEntity?
@@ -59,16 +75,23 @@ interface AesthoryDao {
 
 @Database(
     entities = [ProfileEntity::class, MeasurementEntity::class, CategoryEntity::class,
-        RoutineEntity::class, HabitEntity::class, HabitVersionEntity::class, CompletionEventEntity::class],
-    version = 1, exportSchema = true,
+        RoutineEntity::class, HabitEntity::class, HabitVersionEntity::class, CompletionEventEntity::class, ProgressPhoto::class],
+    version = 2, exportSchema = true,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class AesthoryDatabase : RoomDatabase() {
     abstract fun records(): AesthoryDao
 
     companion object {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS progress_photos (id TEXT NOT NULL, profileId INTEGER NOT NULL, day INTEGER NOT NULL, createdAtMillis INTEGER NOT NULL, area TEXT NOT NULL, view TEXT NOT NULL, note TEXT NOT NULL, fileKey TEXT NOT NULL, sha256 TEXT NOT NULL, byteCount INTEGER NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL, deletedAtMillis INTEGER, PRIMARY KEY(id), FOREIGN KEY(profileId) REFERENCES profiles(id) ON UPDATE NO ACTION ON DELETE NO ACTION)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_progress_photos_profileId ON progress_photos(profileId)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_progress_photos_fileKey ON progress_photos(fileKey)")
+            }
+        }
         fun open(context: Context) = Room.databaseBuilder(
             context.applicationContext, AesthoryDatabase::class.java, "aesthory.db",
-        ).build()
+        ).addMigrations(MIGRATION_1_2).build()
     }
 }

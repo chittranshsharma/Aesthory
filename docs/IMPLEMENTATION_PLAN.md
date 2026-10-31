@@ -26,7 +26,7 @@ Build in this dependency order. Appearance coaching is the core; routines and tr
 
 ## 4. Sharing and recovery before extensive private data
 
-Routine JSON files implemented: explicit preview/save/import, bounded schema validation, transactional independent copies and repeated-import handling. Readable text export and full encrypted backup/restore remain next.
+Routine JSON files and portable encrypted backup/restore are implemented. Full backups use password-derived authenticated streaming encryption, staged validation and transactional record replacement with independent photo files. Wrong-password, tamper, migration, rollback and native photo recovery checks pass; see BACKUPS.md. Readable routine text export remains pending.
 
 - Versioned routine JSON packs and readable text; selected public product/reference details only. Exclude API keys, private photos, nutrition, and completion history by default.
 - Validate size/schema/IDs/links; preview; import atomically into independent copies with explicit duplicate/category handling.
@@ -45,7 +45,7 @@ Built-in rules, five starter routines and 11 searchable guides now work without 
 
 ## 6. Private photos and AI photo review
 
-Local pilot delivered early: in-memory Photo Picker preview, bundled MediaPipe, capture gates, aspect-correct proportions, goal-based styling options and optional imported LiteRT-LM draft path. See LOCAL_ANALYSIS.md. Persistent history, actual optional-model evaluation and remaining gates below are pending.
+Local pilot delivered early: Photo Picker preview, bundled MediaPipe, capture gates, aspect-correct proportions, goal-based styling options and optional imported LiteRT-LM draft path. Saved private photos now have date/area/view/notes, basic earlier/later comparison, Recently deleted/undo, metadata stripping, bounded thumbnails and encrypted recovery. See LOCAL_ANALYSIS.md and BACKUPS.md. Alignment, CameraX, app lock, hosted photo review, actual optional-model evaluation and remaining gates below are pending.
 
 - Photo Picker, private originals, metadata-stripped outgoing derivatives, bounded thumbnails, view/date tags, notes, delete/undo, alignment and comparison. CameraX only when guided capture is built.
 - Quality checks, selected-image preview, explicit remote consent. No public image URL or facial-identity database.

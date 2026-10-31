@@ -63,7 +63,7 @@ Reusable products have name, brand, type, optional photo/barcode, label ingredie
 
 Routine packs carry versioned instructions, schedules, categories, and only selected public reference/product details. Preview before export/import; recipient gets an independent copy. Exclude API keys, completion history, nutrition, and private photos by default. A readable text export accompanies the machine-readable pack.
 
-Full backups are a separate explicit flow with authenticated encryption, portable key derivation, restore validation, and integrity checks. Automatic OS cloud backup is disabled for private app data.
+Full backups are a separate explicit flow with authenticated encryption, portable password-based key derivation, restore validation, and integrity checks. Implemented backups include current structured records and saved photos, including Recently deleted; exclude keys, extra models and preferences; and replace current records only after validation and confirmation. See docs/BACKUPS.md for format and bounds. Automatic OS cloud backup is disabled for private app data. Private Room/photo storage is OS-protected, not independently encrypted at rest by this feature.
 
 ## AI boundaries
 
@@ -85,7 +85,7 @@ Setup includes optional Groq enablement, masked key entry, a Get API key button 
 
 ## Proposed navigation
 
-Current navigation: Today, Coach, Routines, You. Coach holds built-in searchable guides and a separate photo-check action. Technical AI options are collapsed under You. Products, references and persistent progress are later additions, not empty working destinations.
+Current navigation: Today, Coach, Routines, You. Coach holds built-in searchable guides and a separate photo-check action. You includes saved progress photos and Backup & restore; technical AI options remain collapsed. Products and references are later additions, not empty working destinations.
 
 ## Evidence and open decisions
 

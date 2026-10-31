@@ -9,12 +9,14 @@ An Android appearance coach for facial aesthetics, skin, hair and physique, supp
 - Persistent routines, daily habits, instructions, estimated duration, completion and undo.
 - On-device landmarks, recapture feedback and six apparent facial-proportion measurements. Reversible styling options follow your chosen goal.
 - Routine JSON files: preview, save and import independent copies without private history; repeated imports are detected.
+- Private progress-photo journal: date, area, view, notes, earlier/later comparison and Recently deleted with undo.
+- Password-protected full backups through Android's file picker, checked before an explicit replace-and-restore confirmation. Restore also works from setup.
 - Extra LiteRT-LM imports and Groq key settings are optional advanced tools. Groq currently tests connection only; extra language-model weights remain unevaluated.
 - Colorful native Today/Coach/Routines/You screens, clear everyday language, one-tap check-ins, light/dark themes and scalable text.
 
-The bundled face model is pretrained MediaPipe, not a newly trained PSL or facial-bone model. Selfie proportions are not hidden skeletal measurements or clinical findings. Optional language-model weights are not included, downloaded automatically or quality-validated yet. Photo preview is temporary; a persistent progress-photo journal is planned.
+The bundled face model is pretrained MediaPipe, not a newly trained PSL or facial-bone model. Selfie proportions are not hidden skeletal measurements or clinical findings. Optional language-model weights are not included, downloaded automatically or quality-validated yet. Analysis previews are temporary unless you choose “Keep as a progress photo”; journal photos persist independently of analysis.
 
-Health Connect/Google Health, nutrition OCR, Hevy, full backups, products/references, broader specialist retrieval and Notion/Obsidian are subsequent milestones, not active integrations. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
+Health Connect/Google Health, nutrition OCR, Hevy, products/references, broader specialist retrieval and Notion/Obsidian are subsequent milestones, not active integrations. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
 
 ## Build and run
 
@@ -30,7 +32,7 @@ Set `JAVA_HOME`. Create ignored `local.properties` with your SDK path, e.g. `sdk
 
 On macOS/Linux use `sh ./gradlew` with the same tasks. First build downloads pinned Gradle/Maven dependencies. Install `app/build/outputs/apk/debug/app-debug.apk` or run from Android Studio. GitHub Actions also produces a debug APK artifact after successful checks.
 
-No key/account/paid service or personal data is needed for setup, routines or landmarks. INTERNET is used only by the explicit optional Groq test at this checkpoint. Photos are processed locally. Automatic backup is disabled; uninstalling deletes records because portable recovery is pending. Universal debug APK includes native libraries for multiple ABIs; it is not a release-size benchmark.
+No key/account/paid service or personal data is needed for setup, routines or landmarks. INTERNET is used only by the explicit optional Groq test at this checkpoint. Photos are processed locally. Automatic backup is disabled. Use You → Backup & restore before uninstalling or moving phones: saved backups include records, journal photos and Recently deleted, exclude API keys/extra model files, and require their exact password. Forgotten passwords cannot be recovered. See [backup format and recovery](docs/BACKUPS.md). Universal debug APK includes native libraries for multiple ABIs; it is not a release-size benchmark.
 
 ## Working with an agent
 

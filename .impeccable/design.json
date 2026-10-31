@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-31T16:58:37.523696+00:00",
+  "generatedAt": "2026-10-31T17:57:52.0059131+00:00",
   "title": "Design System: Aesthory",
   "extensions": {
     "colorMeta": {
@@ -251,7 +251,9 @@
       "sources": [
         "app/src/main/kotlin/app/aesthory/ui/AesthoryTheme.kt",
         "app/src/main/kotlin/app/aesthory/ui/EverydayScreens.kt",
-        "app/src/main/kotlin/app/aesthory/ui/AesthoryRoot.kt"
+        "app/src/main/kotlin/app/aesthory/ui/AesthoryRoot.kt",
+        "app/src/main/kotlin/app/aesthory/ui/ProgressScreen.kt",
+        "app/src/main/kotlin/app/aesthory/ui/BackupScreen.kt"
       ],
       "components": [
         {
@@ -301,6 +303,18 @@
           "kind": "card",
           "compose": "Card",
           "description": "Active primary/on-primary, medium shape, 20 dp padding, actual progress and inverse button."
+        },
+        {
+          "name": "Private photo journal",
+          "kind": "custom",
+          "compose": "LazyColumn / Card / Checkbox / FilterChip / AlertDialog",
+          "description": "Page spacing with 16 dp card padding and fitted previews; labeled selection of two matching area/view photos, Earlier/Later comparison, scrollable photo-details form, explicit save and recoverable deletion."
+        },
+        {
+          "name": "Backup and restore",
+          "kind": "custom",
+          "compose": "AlertDialog / OutlinedTextField / TextButton",
+          "description": "Scrollable native dialogs with masked labeled password fields, confirmation and mismatch error; valid-input gating, dated real-count restore preview, explicit Replace & restore and Keep current data choices, disabled busy actions and restore progress."
         }
       ]
     }

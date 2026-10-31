@@ -20,6 +20,11 @@ import app.aesthory.routines.HabitSchedule
 import app.aesthory.routines.RoutineFiles
 import app.aesthory.routines.RoutinePack
 import app.aesthory.security.GroqKeyStore
+import app.aesthory.backup.PersonalVault
+import app.aesthory.backup.PreparedBackup
+import app.aesthory.backup.RestorePreview
+import app.aesthory.progress.*
+import android.graphics.Bitmap
 import java.time.LocalDate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +51,15 @@ data class AppState(
     val keyConfigured: Boolean = false,
     val packToShare: RoutinePack? = null,
     val packToImport: RoutinePack? = null,
+    val canCancel: Boolean = true,
+    val backup: PreparedBackup? = null,
+    val restoreSource: Uri? = null,
+    val restorePreview: RestorePreview? = null,
+    val restoreComplete: Boolean = false,
+    val photoSource: Uri? = null,
+    val saveAnalyzedPhoto: Boolean = false,
+    val editingPhoto: ProgressPhoto? = null,
+    val undoPhotoId: String? = null,
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -56,11 +70,14 @@ class MainViewModel(
     private val keys: GroqKeyStore,
     private val groq: GroqConnection,
     private val routineFiles: RoutineFiles,
+    private val vault: PersonalVault,
 ) : ViewModel() {
     private val state = MutableStateFlow(AppState())
     val ui = state.asStateFlow()
     val routines = repository.routines.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val measurements = repository.measurements.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val progressPhotos = vault.photos.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val lastBackupMillis = vault.lastBackupMillis
     private val date = MutableStateFlow(LocalDate.now())
     val today = date.flatMapLatest(repository::today).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     private var work: Job? = null
@@ -68,10 +85,14 @@ class MainViewModel(
     init {
         viewModelScope.launch { repository.profile.collect { profile -> state.update { it.copy(loaded = true, profile = profile) } } }
         refreshCredentials()
+        viewModelScope.launch {
+            try { vault.initialize() } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { state.update { it.copy(message = "Photo storage couldn't be checked. Try again after checking your free space.") } }
+        }
     }
 
     fun refreshDate() { date.value = LocalDate.now() }
-    fun clearMessage() { state.update { it.copy(message = null) } }
+    fun clearMessage() { state.update { it.copy(message = null, undoPhotoId = null) } }
     fun saveProfile(profile: ProfileBaseline, onSaved: () -> Unit = {}) = action {
         repository.saveProfile(profile)
         state.update { it.copy(message = "You're all set. Let's make it your own.") }
@@ -113,6 +134,63 @@ class MainViewModel(
     }
     fun undo(id: String) = action { repository.undoCompletion(id, date.value) }
 
+    fun beginPhoto(uri: Uri) { state.update { it.copy(photoSource = uri, saveAnalyzedPhoto = false, editingPhoto = null, message = null) } }
+    fun beginAnalyzedPhoto() { if (state.value.photo != null) state.update { it.copy(photoSource = null, saveAnalyzedPhoto = true, editingPhoto = null, message = null) } }
+    fun editPhoto(photo: ProgressPhoto) { state.update { it.copy(editingPhoto = photo, photoSource = null, saveAnalyzedPhoto = false, message = null) } }
+    fun dismissPhoto() { state.update { it.copy(photoSource = null, saveAnalyzedPhoto = false, editingPhoto = null) } }
+    suspend fun readPhoto(key: String, small: Boolean): Bitmap = vault.readPhoto(key, small)
+    suspend fun photoDraftPreview(): Bitmap? {
+        val pending = state.value
+        return when {
+            pending.photoSource != null -> vault.previewPhoto(pending.photoSource)
+            pending.editingPhoto != null -> vault.readPhoto(pending.editingPhoto.fileKey, true)
+            pending.saveAnalyzedPhoto -> pending.photo?.bitmap
+            else -> null
+        }
+    }
+    fun saveProgressPhoto(day: LocalDate, area: PhotoArea, view: PhotoView, note: String) = action("That photo couldn't be saved. Choose a still photo and check your free space.") {
+        val pending = state.value
+        if (pending.editingPhoto != null) vault.editPhoto(pending.editingPhoto.id, day, area, view, note)
+        else vault.addPhoto(pending.photoSource, if (pending.saveAnalyzedPhoto) pending.photo?.bitmap else null, day, area, view, note)
+        dismissPhoto()
+        state.update { it.copy(message = "Saved in your progress photos.") }
+    }
+    fun binPhoto(id: String) = action {
+        vault.binPhoto(id)
+        state.update { it.copy(undoPhotoId = id, message = "Photo moved to Recently deleted.") }
+    }
+    fun undoPhoto() {
+        val id = state.value.undoPhotoId ?: return
+        action { vault.binPhoto(id, undo = true); state.update { it.copy(undoPhotoId = null, message = "Photo brought back.") } }
+    }
+    fun restorePhoto(id: String) = action { vault.binPhoto(id, undo = true); state.update { it.copy(message = "Photo brought back.") } }
+    fun deletePhoto(id: String) = action { vault.deletePhoto(id); state.update { it.copy(message = "Photo deleted from this app.", undoPhotoId = null) } }
+    fun prepareBackup(password: CharArray) = action("The backup couldn't be prepared. Check your free space and try again.") {
+        try { val result = vault.prepareBackup(password); state.update { it.copy(backup = result, restoreComplete = false) } }
+        finally { password.fill('\u0000') }
+    }
+    fun saveBackup(uri: Uri) = action("The backup wasn't saved. Choose a writable folder and try again.") {
+        vault.saveBackup(uri, requireNotNull(state.value.backup).token)
+        state.update { it.copy(backup = null, message = "Encrypted backup saved. Keep its password somewhere safe.") }
+    }
+    fun discardBackup() = action { vault.cancelBackup(); state.update { it.copy(backup = null) } }
+    fun chooseRestore(uri: Uri) { state.update { it.copy(restoreSource = uri, restoreComplete = false, message = null) } }
+    fun dismissRestorePassword() { state.update { it.copy(restoreSource = null) } }
+    fun checkBackup(password: CharArray) = action("We couldn't unlock that backup. Check the password or choose an undamaged backup file.") {
+        try {
+            val preview = vault.previewRestore(requireNotNull(state.value.restoreSource), password)
+            state.update { it.copy(restoreSource = null, restorePreview = preview) }
+        } finally { password.fill('\u0000') }
+    }
+    fun cancelRestore() = action { vault.cancelRestore(); state.update { it.copy(restorePreview = null, restoreSource = null) } }
+    fun restoreBackup() = action("The restore couldn't finish. Your current records are unchanged. Open the backup again to retry.") {
+        state.update { it.copy(canCancel = false) }
+        try {
+            vault.restoreBackup(requireNotNull(state.value.restorePreview).token)
+            state.update { it.copy(restorePreview = null, restoreComplete = true, photo = null, offlineText = null, editingPhoto = null, photoSource = null, saveAnalyzedPhoto = false, message = "Your backup is restored.") }
+        } finally { state.update { it.copy(restorePreview = null) } }
+    }
+
     fun analyze(uri: Uri, goal: PresentationGoal) = action {
         state.update { it.copy(photo = null, offlineText = null) }
         val result = faces.analyze(uri, goal)
@@ -143,7 +221,7 @@ class MainViewModel(
         val models = groq.test()
         state.update { it.copy(message = "Connection accepted: ${models.size} models listed. Check your Free plan and limits in Groq; this does not verify billing or image quality.") }
     }
-    fun cancelWork() { work?.cancel() }
+    fun cancelWork() { if (state.value.canCancel) work?.cancel() }
 
     private fun refreshCredentials() {
         viewModelScope.launch {
@@ -160,13 +238,13 @@ class MainViewModel(
             try { block() }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (failure: Exception) {
-                val message = errorMessage ?: when (failure) {
+                val message = (failure as? app.aesthory.backup.VaultUserError)?.message ?: errorMessage ?: when (failure) {
                     is IllegalArgumentException -> "Check the entered values or selected file and try again."
                     is java.io.IOException -> "The file or connection could not be read. Your saved records are unchanged."
                     else -> "We couldn't finish that. Check what you entered or try again in a moment."
                 }
                 state.update { it.copy(message = message) }
-            } finally { state.update { it.copy(busy = false) } }
+            } finally { state.update { it.copy(busy = false, canCancel = true) } }
         }
     }
 }
