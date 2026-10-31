@@ -8,7 +8,7 @@ Build in this dependency order. Appearance coaching is the core; routines and tr
 - Rebrand to user-selected Aesthory. Add optional baseline measurements, coach modes, specialist policy assets, and local model-selection gates.
 - Gate: tests, debug assembly, lint. No launcher, live AI, UI, persistence, or clinical-accuracy claim at this milestone.
 
-## 2. Local profile, routines, and history
+## 2. Local profile, routines, and history — complete
 
 - Add verified stable Room/KSP, exported schemas, repositories/Flow, and focused transaction/migration tests.
 - Persist no-login profile, goals/age band/tone, dated measurements, categories, routine membership/order, habits, instruction versions, schedules, and completion events.
@@ -16,10 +16,10 @@ Build in this dependency order. Appearance coaching is the core; routines and tr
 - Optional measurements remain empty when unknown. Credentials belong in a separate encrypted store, never plaintext Room columns.
 - Gate: create/edit/reorder/archive/reload routines; complete/undo after repository recreation; retain historical instructions and dated measurement updates. Test invalid values, calendar boundaries, pauses, and transactions.
 
-## 3. First UI: setup, Today, and AI settings
+## 3. First UI: setup, Today, and AI settings — usable pilot
 
 - Establish the minimal premium Material 3 world; persist DESIGN.md and the first surface brief. Aesthory's name and appearance-first purpose are settled.
-- Compose/ViewModel/stable Navigation 3: resumable optional baseline setup, Today, routine list/basic editor, five coach entry points, and clear unconfigured states.
+- Compose/ViewModel: resumable optional baseline setup, Today, routine list/basic editor and unconfigured states. Four tabs need no navigation library yet; add Navigation 3 when nested routes warrant it. Five focus choices are not five working chat screens.
 - Optional masked Groq key entry, Get API key browser link, Keystore-backed encryption, explicit connection test/model listing, replace/delete/disable, and quota/offline/errors. Add networking permission/libraries with this real feature.
 - No app email login. Provider authorization is separate; no unimplemented connector may appear working.
 - Gate: finish without key/photos/measurements/permissions; create/complete/restart a routine; verify key deletion and no leakage. Check light/dark, enlarged text, TalkBack, touch targets, and Back on Android.
@@ -40,6 +40,8 @@ Build in this dependency order. Appearance coaching is the core; routines and tr
 - Gate: real UI/API/storage flow, malformed JSON, injection, fake citations, removed key, offline mode, and unsupported/unsafe advice cases. No clinician-equivalent claim.
 
 ## 6. Private photos and AI photo review
+
+Local pilot delivered early: in-memory Photo Picker preview, bundled MediaPipe, capture gates, aspect-correct proportions, goal-based styling options and optional imported LiteRT-LM draft path. See LOCAL_ANALYSIS.md. Persistent history, actual optional-model evaluation and remaining gates below are pending.
 
 - Photo Picker, private originals, metadata-stripped outgoing derivatives, bounded thumbnails, view/date tags, notes, delete/undo, alignment and comparison. CameraX only when guided capture is built.
 - Quality checks, selected-image preview, explicit remote consent. No public image URL or facial-identity database.

@@ -35,6 +35,11 @@ User explicitly selected **Aesthory**, the premium aesthetics direction, on 2026
 
 ## Official GitHub examples
 
+- [MediaPipe Face Landmarker Android](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/android) and [model overview/cards](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/index): existing surface-landmark/blendshape inference. Bundle hash/license are recorded beside the asset. This is not a bony-anatomy or validated attractiveness model.
+- [LiteRT-LM Android](https://developers.google.com/edge/litert-lm/android): CPU Engine, background initialization, Flow output, model compatibility and ThinkingConfig. Integrated pinned 0.19.0; no optional weights have been run in this app yet.
+- [LiteRT-LM container builder](https://github.com/google-ai-edge/LiteRT-LM/blob/76e08ce8c8172d9717cda71d624c7d46b3c2113f/python/litert_lm_builder/litertlm_core.py): LITERTLM magic and little-endian major version 1; preflight does not replace actual runtime initialization.
+- [Qwen3-0.6B LiteRT model card](https://huggingface.co/litert-community/Qwen3-0.6B): inspected as a possible small compatibility-test candidate, not selected as the final coach. Exports/backends differ; published benchmarks are not Aesthory measurements. Small parameter count and a successful load do not establish expert advice.
+
 - [android/nowinandroid](https://github.com/android/nowinandroid): studied its architecture/build documentation as an implementation reference; Apache-2.0. Its large module graph is unnecessary here.
 - [android/compose-samples](https://github.com/android/compose-samples): reference for native state, layouts, and component behavior; Apache-2.0. No application code has been copied from either repository. Preserve license/notice requirements if copying later.
 - Gradle wrapper scripts/JAR are generated or taken from the official Gradle distribution/tag; verify the distribution SHA-256 and retain upstream script headers.

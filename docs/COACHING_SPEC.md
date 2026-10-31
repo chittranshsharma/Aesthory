@@ -8,7 +8,7 @@ Appearance coaching is the product's center. Routines, products, photos, health 
 | --- | --- | --- |
 | Skin | Calm, practical, dermatologist-informed education; current routine, sensitivities, visible texture/irritation observations | Simple care priorities, questions to clarify, product/routine review, notes to discuss with a dermatologist |
 | Hair & Scalp | Practical grooming and haircare coach; hairstyle, scalp-care routine, user-reported changes | Grooming options, routine priorities, dated observations, referral guidance when needed |
-| Facial Aesthetics | Specific, respectful presentation coach; hair/beard/brows/glasses/style, framing and repeatable photos | User-goal-based options and reversible changes, no ranked face score or invented ideal face |
+| Facial Aesthetics | PSL-literate analysis of apparent face/jaw/cheek proportions, eye spacing and eye-corner slope; hair/beard/brows/glasses/style | Measured 2D surface ratios, capture limitations, user-goal-based presentation options and reversible changes; no hidden-bone diagnosis or objective face ranking |
 | Physique | Aesthetics-focused training coach; actual measurements, experience, equipment, training history, nutrition/recovery | Prioritized training/routine proposal and measurable progress targets; no inferred exact body fat or injury diagnosis |
 | Looksmax Mentor | Direct, knowledgeable, forum-literate voice; coordinates the other segments and weighs claims | Clear priorities, effort/cost tradeoffs, evidence grades, and trackable next actions without insults or unsupported promises |
 
@@ -53,6 +53,12 @@ The AAD's warning about diagnostic apps and skin-tone/rare-condition accuracy in
 Validate required fields, enums, source IDs, length/number limits, and references to actually supplied images. Reject malformed/truncated responses. Validation checks syntax and provenance; it does not prove medical accuracy. Source-grounding, image correctness, and unsupported claims need separate evaluation.
 
 ## Initial Groq routing — checked 2026-10-31
+
+Groq is an optional enhancement; it is no longer the only inference path. The built-in MediaPipe model runs on-device for landmarks. Local geometry gates frame size, face count, cropping, roll, coarse pose skew and expression before computing ratios. The initial heuristic gates are not clinically calibrated. The current report measures face breadth/height, jaw-contour/cheek width, inner/outer eye span, lower-face share and bilateral eye-corner slope in an eye-aligned coordinate frame. These measure the photograph's surface projection, not bone structure, classic clinical fWHR, hairline-based facial thirds, or objective PSL attractiveness.
+
+An optional trusted .litertlm model can be imported into private storage, then run with LiteRT-LM on the CPU for short, separate coaching drafts based on measured context. No weights are downloaded automatically, uploaded to GitHub, or newly trained here. Imports are streamed, size-bounded, hashed, container-checked and runtime-initialized before atomic replacement; failure preserves the previous model. The user has 8 GB+ RAM; test a small compatible quantized model first. Phone memory/latency/quality remain evaluation work. Successful copying alone is not a compatible-model claim. Exact calculations, runtime limits and evaluation gates live in LOCAL_ANALYSIS.md.
+
+Local model import is distinct from Groq-key setup. The pretrained landmark model is bundled under its documented Apache-2.0 license and pinned SHA-256; optional language-model licenses/access remain model-specific. Prompt assets set behavior, and measured facts remain a separate report from any generated opinion.
 
 | Task | Candidate | Reason and constraint |
 | --- | --- | --- |

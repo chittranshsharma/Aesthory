@@ -11,3 +11,6 @@ local.properties
 .env
 .env.*
 captures/
+*.litertlm
+*.gguf
+*.partial

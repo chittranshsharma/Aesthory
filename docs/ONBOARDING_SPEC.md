@@ -50,4 +50,4 @@ Use Android Keystore-backed encryption for the local credential; never include i
 - Optional fields, units, age bands, drafts, process recreation, accessibility, and later edits work.
 - API keys cannot appear in saved UI state, reports, exports, screenshots of the masked field, or logs; encrypted storage and deletion are verified on Android.
 - Revoked permissions, offline mode, invalid keys, 429 responses, missing/retired models, and declined photo consent leave local tracking usable.
-- The current foundation implements only baseline validation and routing policies. Setup screens, credential storage, provider calls, and persistence are pending.
+- Current pilot implements two-step focus/baseline setup, editable Profile, Room persistence, encrypted optional key storage/deletion, browser link and explicit model-list test. All measurements can be skipped. Local model import is separate. Detailed skin/hair/training intake, review, unit preferences, generation settings and complete accessibility/error gates remain pending; see STATUS.md.

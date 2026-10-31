@@ -8,7 +8,7 @@ android
 
 ## Stack
 
-Delegated by the user: native Kotlin and Jetpack Compose with Material 3. Room for structured records, DataStore for preferences, Coroutines/Flow and ViewModels for state. Add optional integrations when their milestones start. Initial engineering choice: Android 9+ (API 28), compile/target API 36; revisit with device and distribution requirements.
+Delegated by the user: native Kotlin and Jetpack Compose with Material 3. Room for structured records, Coroutines/Flow and ViewModels for state, Android Keystore for encrypted credentials. DataStore remains available for future ordinary preferences when needed. Android 9+ (API 28), compile/target API 37; current Compose dependencies require API 37. Bundled MediaPipe face landmarks and optional LiteRT-LM support local analysis/coaching. The user reports an 8 GB+ RAM phone; exact model/chipset and on-phone benchmarks remain unknown.
 
 ## Users and purpose
 
@@ -20,6 +20,7 @@ Initially the owner, improving skin, hair, facial presentation, and physique wit
 - Personal records live on the device under one local profile initially. No social feed, messaging, multiplayer, or community.
 - No app email/password login. Setup collects chosen goals and relevant optional baseline metrics; measurements and photos can be added later. Optional source authorization does not create an Aesthory account.
 - Optional Groq processing is remote and must be presented as such. The user supplies their own key; no bundled developer key.
+- User specifically wants PSL-style facial proportions, visible jaw/cheek/eye structure and actionable aesthetics feedback, not only skin analysis. Local analysis must work without Groq. Distinguish photo-derived surface geometry and subjective presentation preferences from hidden skeletal anatomy or objective beauty rankings.
 - The health source is the app linked by the user: `com.fitbit.FitbitMobile`, currently Fitbit/Google Health. Support Health Connect first and investigate an additional optional Google Health API connection for missing cloud/device history. These are separate local and cloud data paths. Preserve provenance, select an authoritative source per metric, and avoid duplicates.
 - Nutrition is logged in another app. Import its screenshot, extract calories/protein/fat/carbs, review, then save.
 - Hevy remains the workout logger; import its exports/shared text without paid API access.
@@ -66,9 +67,11 @@ Full backups are a separate explicit flow with authenticated encryption, portabl
 
 ## AI boundaries
 
-Five specialist segments: Skin, Hair & Scalp, Facial Aesthetics, Physique, and Looksmax Mentor. Different profiles share local goals/history but have explicit boundaries. Use dermatologist-informed education and practical appearance coaching; do not impersonate a licensed dermatologist or claim a selfie establishes a diagnosis.
+Five specialist segments: Skin, Hair & Scalp, Facial Aesthetics, Physique, and Looksmax Mentor. Facial Aesthetics includes apparent face/jaw/cheek proportions, eye spacing and eye-corner slope, alongside presentation options. Different profiles share local goals/history but have explicit boundaries. Use dermatologist-informed education and practical appearance coaching; do not impersonate a licensed dermatologist or claim a selfie establishes a diagnosis.
 
-Private photo assessment is a core planned feature: user-selected 2D images, quality checks, visible observations and uncertainty, prioritized suggestions, and proposed habits. Do not call ordinary photos a validated 3D/medical scan or infer identity, age, ethnicity, hormones, exact body fat, skeletal dimensions, or attractiveness scores. See COACHING_SPEC.md for the report contract, source grading, and evaluation gates.
+Private photo assessment is core: user-selected 2D images, quality checks, visible observations/ratios and uncertainty, prioritized suggestions, and proposed habits. Do not call ordinary photos a validated 3D/medical scan or infer identity, age, ethnicity, hormones, exact body fat, skeletal dimensions, or a scientifically objective PSL score. See COACHING_SPEC.md for the report contract, source grading, and evaluation gates.
+
+The first local path uses an existing licensed pretrained landmark bundle, deterministic geometry, and preference-based presentation options. It is not a custom-trained aesthetics model. A compatible imported LiteRT-LM model can produce a separate offline coaching draft from measurements without sending the original photo to a provider. This must not overwrite measured facts or imply evaluated medical/attractiveness performance.
 
 Specialist instructions and retrieval of curated sources configure the hosted model; this is not model-weight training. Forum material can inform questions, language, and user preferences while remaining labeled anecdotal. No blanket scraping/training on forum content or private photos.
 
@@ -86,4 +89,4 @@ Today; Coaches; Routines; Progress. Library (products/references/packs) is acces
 
 ## Evidence and open decisions
 
-No real screenshots, calorie-app name, Hevy export sample, health records, product data, or test device have been supplied. Do not fabricate them. Unknowns: phone/Android version, exact nutrition layout, optional Notion versus Obsidian workflow, desired app-level encryption scope, and future distribution channel. These do not block project foundation work.
+No personal photos, calorie-app screenshot, Hevy export sample, health records, or product data have been supplied. The user reports 8 GB+ RAM. A development emulator is available; it is not evidence of performance on the user's phone. Unknowns: exact phone/chipset/Android version, nutrition layout, selected Notion/Obsidian workflow, broader encryption scope, and distribution channel. Never fabricate these.
