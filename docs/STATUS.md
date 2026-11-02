@@ -1,40 +1,40 @@
 # Status
 
-2026-10-31 · Aesthory 0.3.0 · Android only · target phone 8 GB+ RAM; exact hardware unknown.
+2026-11-02 · Aesthory 0.4.0 · Android only · target phone 8 GB+ RAM; exact hardware unknown.
 
 ## Done
 
-- Everyday coaching still works without a key/model: five starter routines, ordered next actions, 11 searchable guides and colorful native Today/Coach/Routines/You screens.
-- Added You → My progress photos: private saved copies, date/area/view/notes, earlier/later comparison for matching views, edit details, Recently deleted, undo/bring back and confirmed permanent deletion. Coach previews can be explicitly saved to the journal.
-- Added You → Backup & restore, also reachable from setup. Password-protected portable files include structured records/history and all journal photos, including Recently deleted. Keys, extra models and preferences are excluded. Android's file picker chooses the destination.
-- Restore fully authenticates and validates the file before showing counts/date and an explicit replacement confirmation. New image files stage independently; one database transaction replaces records. Failure before commit preserves current records/photos. See BACKUPS.md for format, limits and recovery invariants.
-- Added Room v1→v2 migration without destructive reset, metadata-stripped/oriented JPEG copies and separate bounded thumbnails. Preserved existing routine/history, local MediaPipe, optional experimental LiteRT-LM and encrypted Groq key settings.
+- Added a detailed action editor under Routines → Details → Edit action. Optional sections cover instructions/reason/busy-day version, dates/selected weekdays/day intervals, all six tracking types, duration estimate, categories, tags, products and references. Save stays visible; Back protects unsaved changes.
+- Added You → Products & references, also reachable while editing a habit. Reusable products hold brand/type/size, label/personal notes, links, opening/expiry/label-month dates, stock and dated observations. Notes/links support source dates, reviewed UTF-8 text/Markdown file import, search and archive/recovery.
+- Saved habit versions snapshot linked details, so later library edits never rewrite past instructions. Added partial/skip logging, ordering, pause/archive/recover and a history viewer with the original steps and linked content. Dated observations keep the product name used at the time.
+- Added readable routine text plans. JSON/text sharing retains routine definitions and excludes library content, observations and private history. Existing version-1 pack fingerprints stay stable; richer definitions use pack version 2.
+- Added non-destructive Room v1→v2→v3 migrations. Full encrypted backups now include libraries, observations and link snapshots; v0.3.0 backups still restore. Preserved saved photos, everyday built-in coaching and optional AI settings.
 
 ## Verified
 
-- **76 unit tests passed**, zero failures/errors: includes multisegment encryption, wrong passwords, tampering/truncation, snapshot validation/roundtrip, rollback, live Flow refresh, original-v1 migration and comparison rules.
-- **4 Android tests passed** on owned API35 x86_64 emulator. New vault test verifies orientation/location-metadata removal, gallery-source independence, encrypted photo/bin recovery, regenerated thumbnails, key/model preservation and failed restore leaving current data intact. Existing Keystore and bundled-model checks also passed.
-- Debug assembly and lint passed: **0 lint errors, 16 warnings** (update advisories and optional icon/KTX/storage refinements; no suppressions). The final Back-label correction was rebuilt/linted and the unit suite rerun.
-- Native manual flows: setup restore entry, save photos/date, force-stop/relaunch retention, earlier/later comparison, move to Recently deleted/Undo, password-protected backup through Android's save picker, wrong-password feedback, checked restore preview and successful restore through the real file picker.
-- Native phone captures reviewed in light/dark and at 1.3× text. Independent finish review found no material layout defects; the return-label correction was applied. Captures/public QA photos stay ignored and are not shipped.
-- GitHub Actions runs unit/lint/build checks and publishes a debug APK artifact after successful pushes. Device/manual results above are local emulator checks, not CI or physical-phone benchmarks.
+- **88 unit tests passed**, zero failures/errors. New cases cover historical snapshots, edit rollback, ordering/state recovery, library backup/sharing exclusions, original-v2 migration/backup compatibility, file/URL validation and time-goal roundtrips.
+- **4 Android tests passed** on the owned API35 x86_64 emulator. Extended vault coverage restores products, references, observations and use notes alongside photos while preserving keys/models and failed-restore recovery. Final rerun used instrumentation directly to retain manual test fixtures.
+- Final debug/test APK assembly and lint passed: **0 errors, 16 warnings** (existing update/icon/KTX/storage refinements; no suppressions).
+- Native manual flows: actual v0.3.0 backup recovery; product creation; Markdown picker/import/review; linked habit creation; rotation with draft retained; partial/full checklist logging; history after tracking edits; product observation/archive/bring back; readable text export through the save picker; dirty Back/discard; force-stop/relaunch retention.
+- Light/dark phone captures and 1.3× text checked. Fixed clipped section labels, kept Save visible, made checklist rows tappable, and added spacing between wrapped choices. Independent finish review: ship, with the spacing fix confirmed. Photos/captures and test files remain ignored.
+- GitHub Actions runs unit/lint/build checks and uploads a debug APK after successful pushes. Emulator results are not physical-phone benchmarks or a complete accessibility audit.
 
 ## Next
 
-1. Detailed habit editor: everyday tracking, schedules, instructions, duration and optional product/reference sections; readable routine text export.
-2. Products/references, then nutrition screenshot review, Hevy file import and Health Connect per IMPLEMENTATION_PLAN.md. These are not active integrations.
+1. Running timers, weekly targets and local reminders; preserve timer state across restart and handle notification/timezone/battery conditions.
+2. Nutrition screenshot review, then Hevy file import and Health Connect per IMPLEMENTATION_PLAN.md. A real calorie-app screenshot/export will be needed for layout-specific validation.
 
-Remaining limits: saved copies cap the longest side at 2048 pixels; backups cap at 512 MiB and journals at 500 photos. Forgotten backup passwords cannot be recovered. Exported backups are encrypted; the live Room/photo store uses Android private storage, without separate app-level at-rest encryption. App lock, alignment, hosted generation, optional-weight evaluation, full TalkBack audit, physical-phone benchmarks and clinical review remain pending. No trained PSL/bone model or expert-equivalent accuracy is claimed.
+Limits: time spent is logged manually; no running timer/reminder yet. References support text/Markdown and links, not PDF/image attachments or live Notion/Obsidian sync. Product photos/barcodes/purchase details, permanent library deletion, AI retrieval/generation, optional-weight evaluation, physical-phone benchmarks and full TalkBack/domain review remain pending. Archived library content remains stored and backed up. See HABITS.md and BACKUPS.md for bounds and recovery behavior.
 
 ## Checks
 
-JDK 21; SDK37; pinned tools/dependencies in Gradle catalog. Local JDK: `%USERPROFILE%/.cache/ritloom/jdk-21.0.13+9`.
+JDK 21; SDK37; pinned dependencies in Gradle catalog. Local JDK: `%USERPROFILE%/.cache/ritloom/jdk-21.0.13+9`.
 
 ```powershell
 $env:JAVA_HOME = Join-Path $env:USERPROFILE '.cache\ritloom\jdk-21.0.13+9'
 .\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
-# Connected tests only on an owned test device/emulator: the runner uninstalls the app.
+# Connected tests only on an owned test device/emulator: this task uninstalls the app.
 .\gradlew.bat :app:connectedDebugAndroidTest
 ```
 
-Reports: `app/build/reports/`; APK: `app/build/outputs/apk/debug/app-debug.apk`. Load only task-specific specs; keep this report to current done/verified/next.
+Reports: `app/build/reports/`; APK: `app/build/outputs/apk/debug/app-debug.apk`. Keep this report to current done/verified/next; task-specific details live in HABITS.md.

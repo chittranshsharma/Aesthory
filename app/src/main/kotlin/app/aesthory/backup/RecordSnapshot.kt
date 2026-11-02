@@ -15,12 +15,14 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
 
-data class BackupSummary(val createdAtMillis: Long, val routines: Int, val checkIns: Int, val photos: Int, val binnedPhotos: Int)
+data class BackupSummary(val createdAtMillis: Long, val routines: Int, val checkIns: Int, val photos: Int, val binnedPhotos: Int, val products: Int = 0, val references: Int = 0)
 
 /** Exact allowlist: credentials, preferences and optional model files cannot enter this format. */
 object RecordSnapshot {
     const val MAX_BYTES = 16 * 1024 * 1024
-    val tables = listOf("profiles", "measurements", "categories", "routines", "habits", "habit_versions", "completion_events", "progress_photos")
+    private val v2Tables = listOf("profiles", "measurements", "categories", "routines", "habits", "habit_versions", "completion_events", "progress_photos")
+    val tables = listOf("profiles", "measurements", "categories", "routines", "products", "personal_references", "product_observations",
+        "habits", "habit_versions", "habit_product_links", "habit_reference_links", "completion_events", "progress_photos")
     suspend fun capture(db: AesthoryDatabase, at: Long): JSONObject = db.withTransaction {
         val data = JSONObject()
         tables.forEach { table ->
@@ -43,7 +45,7 @@ object RecordSnapshot {
             }
             data.put(table, rows)
         }
-        JSONObject().put("format", 1).put("schema", 2).put("createdAtMillis", at).put("tables", data)
+        JSONObject().put("format", 1).put("schema", 3).put("createdAtMillis", at).put("tables", data)
     }
     fun encode(snapshot: JSONObject): ByteArray = snapshot.toString().toByteArray(Charsets.UTF_8).also { require(it.size <= MAX_BYTES) }
     fun decode(bytes: ByteArray): JSONObject {
@@ -53,8 +55,20 @@ object RecordSnapshot {
         val parser = JSONTokener(text)
         val root = parser.nextValue() as? JSONObject ?: error("Invalid backup records")
         require(parser.nextClean().code == 0 && root.keys().asSequence().toSet() == setOf("format", "schema", "createdAtMillis", "tables"))
-        if (root.get("format").toString() != "1" || root.get("schema").toString() != "2") throw VaultUserError("This backup version isn't supported here. Keep the file and update Aesthory before trying again.")
+        if (root.get("format").toString() != "1" || root.get("schema").toString() !in setOf("2", "3")) throw VaultUserError("This backup version isn't supported here. Keep the file and update Aesthory before trying again.")
         require(root.get("createdAtMillis").toString().toLong() >= 0)
+        if (root.get("schema").toString() == "2") {
+            val data = root.getJSONObject("tables")
+            require(data.keys().asSequence().toSet() == v2Tables.toSet())
+            val definitions = data.getJSONArray("habit_versions")
+            repeat(definitions.length()) { index ->
+                val row = definitions.getJSONObject(index)
+                require(!row.has("purpose") && !row.has("tags") && !row.has("shortInstructions"))
+                row.put("purpose", "").put("tags", "[]").put("shortInstructions", "")
+            }
+            (tables - v2Tables.toSet()).forEach { data.put(it, JSONArray()) }
+            root.put("schema", 3)
+        }
         require(root.getJSONObject("tables").keys().asSequence().toSet() == tables.toSet())
         return root
     }
@@ -62,7 +76,8 @@ object RecordSnapshot {
         val data = snapshot.getJSONObject("tables")
         val photos = data.getJSONArray("progress_photos")
         val binned = (0 until photos.length()).count { !photos.getJSONObject(it).isNull("deletedAtMillis") }
-        return BackupSummary(snapshot.getLong("createdAtMillis"), data.getJSONArray("routines").length(), data.getJSONArray("completion_events").length(), photos.length(), binned)
+        return BackupSummary(snapshot.getLong("createdAtMillis"), data.getJSONArray("routines").length(), data.getJSONArray("completion_events").length(), photos.length(), binned,
+            data.getJSONArray("products").length(), data.getJSONArray("personal_references").length())
     }
     suspend fun validate(context: Context, snapshot: JSONObject) {
         val staging = Room.inMemoryDatabaseBuilder(context, AesthoryDatabase::class.java).build()
@@ -76,6 +91,10 @@ object RecordSnapshot {
             dao.getCategories().forEach { require(it.name.isNotBlank()) }
             val versions = dao.allVersions()
             versions.forEach { v -> require(v.version > 0 && v.title.isNotBlank() && (v.estimatedMinutes == null || v.estimatedMinutes > 0)); v.schedule.toDomain() }
+            versions.forEach { v -> require(v.purpose.length <= 1000 && v.shortInstructions.length <= 2000 && v.tags.size <= 10 && v.tags.all { it.isNotBlank() && it.length <= 40 } && v.tags.distinct().size == v.tags.size) }
+            dao.allProducts(); dao.allReferences(); dao.allObservations()
+            require(dao.allProductLinks().groupingBy { it.habitId to it.version }.eachCount().values.all { it <= 20 })
+            require(dao.allReferenceLinks().groupingBy { it.habitId to it.version }.eachCount().values.all { it <= 20 })
             val byVersion = versions.associateBy { it.habitId to it.version }
             dao.allHabits().forEach { require(it.position >= 0 && byVersion.containsKey(it.id to it.currentVersion)) }
             dao.allEvents().forEach { event ->
@@ -115,12 +134,12 @@ object RecordSnapshot {
                         type == "REAL" -> { require(value is Number && value.toDouble().isFinite()); values.put(column, value.toDouble()) }
                         type == "TEXT" -> {
                             require(value is String && value.length <= 1_000_000)
-                            if (column == "tracking_items" || column == "checkedItems") {
+                            if (column == "tracking_items" || column == "checkedItems" || column == "tags") {
                                 checkDepth(value)
                                 val array = JSONArray(value)
                                 require(array.length() <= 1000)
                                 repeat(array.length()) { position ->
-                                    if (column == "tracking_items") require(array.get(position) is String)
+                                    if (column != "checkedItems") require(array.get(position) is String)
                                     else require(array.get(position) is Number && array.get(position).toString().toIntOrNull() != null)
                                 }
                             }

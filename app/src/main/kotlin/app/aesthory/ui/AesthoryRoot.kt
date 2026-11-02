@@ -66,7 +66,7 @@ fun AesthoryRoot(model: MainViewModel) {
             snackbarHost = { SnackbarHost(snackbar) },
             topBar = { TopAppBar(title = { Text(if (state.profile == null) "Aesthory" else listOf("Today", "Coach", "Routines", "You")[tab]) }) },
             bottomBar = {
-                if (state.profile != null) NavigationBar {
+                if (state.profile != null && state.openEditors == 0) NavigationBar {
                     val titles = listOf("Today", "Coach", "Routines", "You")
                     val icons = listOf(R.drawable.ic_home, R.drawable.ic_face, R.drawable.ic_routines, R.drawable.ic_profile)
                     titles.forEachIndexed { index, title ->
@@ -86,7 +86,7 @@ fun AesthoryRoot(model: MainViewModel) {
                 }
                 when {
                     !state.loaded -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    recovery -> BackupScreen(model) { recovery = false; tab = 0 }
+                    recovery -> BackupScreen(model, if (state.profile == null) "Back to setup" else "Back to Today") { recovery = false; tab = 0 }
                     state.profile == null -> BaselineForm(null, model, state.busy, onRestore = { recovery = true })
                     tab == 0 -> TodayScreen(model, onRoutines = { tab = 2 }, onAnalyze = { tab = 1; photoReview = true })
                     tab == 1 -> if (photoReview) AnalyzeScreen(model) { photoReview = false } else CoachScreen(model) { photoReview = true }
@@ -213,10 +213,25 @@ private fun RoutinesScreen(model: MainViewModel) {
     val routines by model.routines.collectAsStateWithLifecycle()
     val state by model.ui.collectAsStateWithLifecycle()
     var addingRoutine by remember { mutableStateOf(false) }
-    var addingHabit by remember { mutableStateOf<String?>(null) }
+    var addingHabit by rememberSaveable { mutableStateOf<String?>(null) }
+    var editingHabitId by rememberSaveable { mutableStateOf<String?>(null) }
+    var historyId by rememberSaveable { mutableStateOf<String?>(null) }
+    if (historyId != null) {
+        BackHandler { historyId = null }
+        HabitHistoryScreen(model, historyId!!) { historyId = null }
+        return
+    }
+    if (addingHabit != null) {
+        val editingHabits by remember(addingHabit) { model.habits(addingHabit!!) }.collectAsStateWithLifecycle(emptyList())
+        val existing = editingHabits.find { it.definition.habitId == editingHabitId }
+        if (editingHabitId == null || existing != null) HabitEditorScreen(model, addingHabit!!, existing) { addingHabit = null; editingHabitId = null }
+        else Page { Text("Opening your action…"); CircularProgressIndicator() }
+        return
+    }
     var removing by remember { mutableStateOf<RoutineEntity?>(null) }
     val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) model.previewPack(uri) }
     val saveFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri -> if (uri != null) model.writePack(uri) }
+    val saveText = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri -> if (uri != null) model.writePack(uri) }
     Page {
         Text("Make it a habit.", style = MaterialTheme.typography.headlineMedium)
         Text("Pick a ready-made routine or build something that fits your day.")
@@ -231,12 +246,13 @@ private fun RoutinesScreen(model: MainViewModel) {
                     TextButton(onClick = { menu = true }) { Text("More") }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(text = { Text("Save a routine file") }, enabled = !state.busy, onClick = { menu = false; model.prepareShare(routine.id) })
+                        DropdownMenuItem(text = { Text("Save a readable plan") }, enabled = !state.busy, onClick = { menu = false; model.prepareShare(routine.id, readable = true) })
                         DropdownMenuItem(text = { Text("Remove from my day") }, enabled = !state.busy, onClick = { menu = false; removing = routine })
                     }
                 }
             }
-            RoutineHabits(routine, model)
-            FilledTonalButton(onClick = { addingHabit = routine.id }, enabled = !state.busy) { Text("Add an action") }
+            RoutineHabits(routine, model, onEdit = { editingHabitId = it.definition.habitId; addingHabit = routine.id }, onHistory = { historyId = it })
+            FilledTonalButton(onClick = { editingHabitId = null; addingHabit = routine.id }, enabled = !state.busy) { Text("Add an action") }
             HorizontalDivider()
         }
         StarterPicker(model)
@@ -247,7 +263,8 @@ private fun RoutinesScreen(model: MainViewModel) {
         AlertDialog(onDismissRequest = model::dismissPacks,
             title = { Text(if (importing) "Add ${preview.name}?" else "Save ${preview.name}?") },
             text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("${preview.habits.size} actions. Includes the routine's instructions and schedule. No photos, measurements, API keys or check-in history.")
+                Text("${preview.habits.size} actions. Includes instructions, schedule and tracking. Products, personal references, photos, measurements, API keys and check-in history stay out. Check your written instructions for private details before sharing.")
+                if (!importing && state.shareReadable) Text("A readable text plan for viewing or sharing. Use a routine file if the other person wants to import it.")
                 if (importing) Text("This becomes your own editable copy. Check the dates and instructions before adding it; it isn't verified health advice.")
                 preview.habits.forEach { habit ->
                     Text(habit.title, style = MaterialTheme.typography.titleMedium)
@@ -257,7 +274,7 @@ private fun RoutinesScreen(model: MainViewModel) {
                     Text("Starts ${habit.schedule.startDate.format(dateFormat)}" + (habit.schedule.endDate?.let { " · ends ${it.format(dateFormat)}" } ?: ""), style = MaterialTheme.typography.bodySmall)
                 }
             } },
-            confirmButton = { TextButton(enabled = !state.busy, onClick = { if (importing) model.importPack() else saveFile.launch("aesthory-routine.json") }) { Text(if (importing) "Add to my routines" else "Choose where to save") } },
+            confirmButton = { TextButton(enabled = !state.busy, onClick = { if (importing) model.importPack() else if (state.shareReadable) saveText.launch("aesthory-plan.txt") else saveFile.launch("aesthory-routine.json") }) { Text(if (importing) "Add to my routines" else "Choose where to save") } },
             dismissButton = { TextButton(onClick = model::dismissPacks) { Text("Not now") } },
         )
     }
@@ -271,48 +288,42 @@ private fun RoutinesScreen(model: MainViewModel) {
             dismissButton = { TextButton(onClick = { addingRoutine = false }) { Text("Cancel") } },
         )
     }
-    addingHabit?.let { routineId ->
-        var title by rememberSaveable { mutableStateOf("") }
-        var instructions by rememberSaveable { mutableStateOf("") }
-        var minutes by rememberSaveable { mutableStateOf("") }
-        val validMinutes = minutes.isBlank() || minutes.toIntOrNull()?.let { it > 0 } == true
-        AlertDialog(
-            onDismissRequest = { addingHabit = null }, title = { Text("Add an action") },
-            text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(title, { title = it }, label = { Text("What will you do?") })
-                OutlinedTextField(instructions, { instructions = it }, label = { Text("How you'll do it") })
-                NumberField(minutes, { minutes = it }, "About how many minutes? (optional)")
-                Text("Starts today and repeats every day. Check it off when you're done.", style = MaterialTheme.typography.bodySmall)
-            } },
-            confirmButton = { TextButton(enabled = title.isNotBlank() && validMinutes && !state.busy, onClick = {
-                model.addHabit(routineId, title, instructions, minutes.toIntOrNull()) { addingHabit = null }
-            }) { Text("Add action") } },
-            dismissButton = { TextButton(onClick = { addingHabit = null }) { Text("Cancel") } },
-        )
-    }
 }
 
 @Composable
-private fun RoutineHabits(routine: RoutineEntity, model: MainViewModel) {
+private fun RoutineHabits(routine: RoutineEntity, model: MainViewModel, onEdit: (CurrentHabit) -> Unit, onHistory: (String) -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
     val habits by remember(routine.id) { model.habits(routine.id) }.collectAsStateWithLifecycle(emptyList())
     val state by model.ui.collectAsStateWithLifecycle()
-    habits.filter { it.state != app.aesthory.routines.HabitState.ARCHIVED }.forEach { habit ->
+    var showArchived by rememberSaveable(routine.id) { mutableStateOf(false) }
+    if (habits.any { it.state == app.aesthory.routines.HabitState.ARCHIVED }) TextButton(onClick = { showArchived = !showArchived }) { Text(if (showArchived) "Hide archived actions" else "Show archived actions") }
+    habits.filter { showArchived || it.state != app.aesthory.routines.HabitState.ARCHIVED }.forEach { habit ->
         var expanded by rememberSaveable(habit.definition.habitId) { mutableStateOf(false) }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(habit.definition.title, style = MaterialTheme.typography.titleMedium)
-                    Text(if (habit.state == app.aesthory.routines.HabitState.PAUSED) "Taking a break" else repeatLabel(habit.definition.schedule.toDomain(), locale) + (habit.definition.estimatedMinutes?.let { " · about $it min" } ?: ""), style = MaterialTheme.typography.bodySmall)
+                    Text(when (habit.state) { app.aesthory.routines.HabitState.PAUSED -> "Taking a break"; app.aesthory.routines.HabitState.ARCHIVED -> "Archived"; else -> repeatLabel(habit.definition.schedule.toDomain(), locale) + (habit.definition.estimatedMinutes?.let { " · about $it min" } ?: "") }, style = MaterialTheme.typography.bodySmall)
                 }
                 TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Less" else "Details") }
             }
             if (expanded) {
                 Text(habit.definition.instructions.ifBlank { "No instructions added yet." })
-                TextButton(enabled = !state.busy, onClick = { model.setHabitState(habit.definition.habitId,
-                    if (habit.state == app.aesthory.routines.HabitState.PAUSED) app.aesthory.routines.HabitState.ACTIVE else app.aesthory.routines.HabitState.PAUSED) }) {
-                    Text(if (habit.state == app.aesthory.routines.HabitState.PAUSED) "Bring it back" else "Pause this habit")
+                if (habit.definition.purpose.isNotBlank()) Text("Why: " + habit.definition.purpose)
+                if (habit.definition.shortInstructions.isNotBlank()) Text("Busy-day version: " + habit.definition.shortInstructions)
+                Text("Tracking: " + trackingLabel(habit.definition.tracking.kind))
+                LinkedHabitDetails(model, habit.definition.habitId, habit.definition.version)
+                TextButton(enabled = !state.busy, onClick = { onEdit(habit) }) { Text("Edit action") }
+                TextButton(onClick = { onHistory(habit.definition.habitId) }) { Text("Past check-ins") }
+                Row {
+                    TextButton(enabled = !state.busy && habit.position > 0, onClick = { model.moveHabit(habit.definition.habitId, -1) }) { Text("Move up") }
+                    TextButton(enabled = !state.busy && habit.position < habits.lastIndex, onClick = { model.moveHabit(habit.definition.habitId, 1) }) { Text("Move down") }
                 }
+                TextButton(enabled = !state.busy, onClick = { model.setHabitState(habit.definition.habitId,
+                    if (habit.state != app.aesthory.routines.HabitState.ACTIVE) app.aesthory.routines.HabitState.ACTIVE else app.aesthory.routines.HabitState.PAUSED) }) {
+                    Text(if (habit.state != app.aesthory.routines.HabitState.ACTIVE) "Bring it back" else "Pause this habit")
+                }
+                if (habit.state != app.aesthory.routines.HabitState.ARCHIVED) TextButton(enabled = !state.busy, onClick = { model.setHabitState(habit.definition.habitId, app.aesthory.routines.HabitState.ARCHIVED) }) { Text("Archive action") }
             }
         }
     }
@@ -330,16 +341,23 @@ internal fun CompletionDialog(habit: CurrentHabit, model: MainViewModel, dismiss
         onDismissRequest = dismiss, title = { Text(habit.definition.title) },
         text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (habit.definition.instructions.isNotBlank()) Text(habit.definition.instructions)
+            if (habit.definition.shortInstructions.isNotBlank()) Text("Busy-day version: " + habit.definition.shortInstructions)
+            LinkedHabitDetails(model, habit.definition.habitId, habit.definition.version)
             when (settings.kind) {
                 TrackingKind.CHECKBOX -> Text("Done for today? Give yourself the credit.")
-                TrackingKind.CHECKLIST -> settings.items.forEachIndexed { index, label -> Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(index in checked, onCheckedChange = { checked = if (it) checked + index else checked - index }); Text(label)
+                TrackingKind.CHECKLIST -> settings.items.forEachIndexed { index, label -> SelectRow(label, index in checked) {
+                    checked = if (index in checked) checked - index else checked + index
                 } }
                 else -> NumberField(value, { value = it }, when (settings.kind) {
                     TrackingKind.DURATION -> "Seconds"; TrackingKind.RATING -> "Rating (1–${settings.target?.toInt()})"
                     TrackingKind.VALUE -> settings.unit.orEmpty(); else -> "Count"
                 })
             }
+            if (settings.kind != TrackingKind.CHECKBOX) {
+                val partial = CompletionInput(CompletionStatus.PARTIAL, value.toDoubleOrNull(), checked)
+                TextButton(enabled = !state.busy && runCatching { partial.validateFor(settings) }.isSuccess, onClick = { model.logHabit(habit.definition.habitId, partial, dismiss) }) { Text("Save what I did") }
+            }
+            TextButton(enabled = !state.busy, onClick = { model.logHabit(habit.definition.habitId, CompletionInput(CompletionStatus.SKIPPED), dismiss) }) { Text("Skip for today") }
         } },
         confirmButton = { TextButton(enabled = valid && !state.busy, onClick = { model.logHabit(habit.definition.habitId, input, dismiss) }) { Text("Complete") } },
         dismissButton = { TextButton(onClick = dismiss) { Text("Cancel") } },
@@ -435,7 +453,11 @@ private fun ProfileScreen(model: MainViewModel) {
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) model.importModel(uri) }
     if (section != null) {
         BackHandler { section = null }
-        if (section == "photos") ProgressScreen(model) { section = null } else BackupScreen(model) { section = null }
+        when (section) {
+            "photos" -> ProgressScreen(model) { section = null }
+            "library" -> LibraryScreen(model) { section = null }
+            else -> BackupScreen(model) { section = null }
+        }
         return
     }
     if (editing) {
@@ -457,6 +479,7 @@ private fun ProfileScreen(model: MainViewModel) {
         }
         Button(onClick = { editing = true }) { Text("About you & your goals") }
         FilledTonalButton(onClick = { section = "photos" }) { Text("My progress photos") }
+        FilledTonalButton(onClick = { section = "library" }) { Text("Products & references") }
         OutlinedButton(onClick = { section = "backup" }) { Text("Backup & restore") }
         measurements.firstOrNull()?.let { latest ->
             SectionHeading("Your measurements")

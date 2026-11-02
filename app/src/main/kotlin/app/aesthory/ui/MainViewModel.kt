@@ -8,6 +8,7 @@ import app.aesthory.coaching.OfflineCoach
 import app.aesthory.coaching.StarterRoutine
 import app.aesthory.data.AesthoryRepository
 import app.aesthory.data.HabitDraft
+import app.aesthory.library.*
 import app.aesthory.data.ProfileEntity
 import app.aesthory.face.AnalyzedPhoto
 import app.aesthory.face.FaceReview
@@ -41,6 +42,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class AppState(
+    val openEditors: Int = 0,
+    val referenceImport: String? = null,
+    val shareReadable: Boolean = false,
     val loaded: Boolean = false,
     val profile: ProfileEntity? = null,
     val busy: Boolean = false,
@@ -71,6 +75,7 @@ class MainViewModel(
     private val groq: GroqConnection,
     private val routineFiles: RoutineFiles,
     private val vault: PersonalVault,
+    private val referenceFiles: ReferenceFiles,
 ) : ViewModel() {
     private val state = MutableStateFlow(AppState())
     val ui = state.asStateFlow()
@@ -78,6 +83,34 @@ class MainViewModel(
     val measurements = repository.measurements.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val progressPhotos = vault.photos.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val lastBackupMillis = vault.lastBackupMillis
+    val categories = repository.categories.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val products = repository.products.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val references = repository.references.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    fun observationsFor(id: String) = repository.observationsFor(id)
+    fun habitLinks(id: String, version: Int) = repository.links(id, version)
+    fun saveProduct(product: ProductEntity, saved: () -> Unit) = action("That product couldn't be saved. Check the details and try again.") { repository.saveProduct(product); saved() }
+    fun saveReference(reference: ReferenceEntity, saved: () -> Unit) = action("That note couldn't be saved. Check the details and try again.") { repository.saveReference(reference); saved() }
+    fun archiveProduct(id: String, archived: Boolean) = action { repository.archiveProduct(id, archived) }
+    fun archiveReference(id: String, archived: Boolean) = action { repository.archiveReference(id, archived) }
+    fun addObservation(id: String, day: LocalDate, note: String, saved: () -> Unit) = action { repository.addObservation(id, day, note); saved() }
+    fun importReference(uri: Uri) = action("Choose a UTF-8 text or Markdown file under 128 KB with no more than 32,000 characters. PDF and image files aren't supported here yet.") {
+        val content = referenceFiles.read(uri)
+        state.update { it.copy(referenceImport = content) }
+    }
+    fun clearReferenceImport() { state.update { it.copy(referenceImport = null) } }
+    fun notifyUser(message: String) { state.update { it.copy(message = message) } }
+    fun editorSession(open: Boolean) { state.update { it.copy(openEditors = maxOf(0, it.openEditors + if (open) 1 else -1)) } }
+    fun addCategory(name: String, saved: (String) -> Unit) = action {
+        val existing = repository.categories.first().find { it.name.equals(name.trim(), ignoreCase = true) }
+        require(name.isNotBlank() && name.trim().length <= 80)
+        saved(existing?.id ?: repository.createCategory(name))
+    }
+    fun saveHabitDetails(routineId: String, id: String?, draft: HabitDraft, saved: () -> Unit) = action("That action couldn't be saved. Check your entries and try again.") {
+        if (id == null) repository.addHabit(routineId, draft) else repository.editHabit(id, draft)
+        saved()
+    }
+    fun moveHabit(id: String, direction: Int) = action { repository.moveHabit(id, direction) }
+    suspend fun historyDetails(id: String) = repository.historyDetails(id)
     private val date = MutableStateFlow(LocalDate.now())
     val today = date.flatMapLatest(repository::today).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     private var work: Job? = null
@@ -105,12 +138,12 @@ class MainViewModel(
     }
     fun archiveRoutine(id: String) = action { repository.archiveRoutine(id) }
     fun setHabitState(id: String, habitState: app.aesthory.routines.HabitState) = action { repository.setHabitState(id, habitState) }
-    fun prepareShare(id: String) = action("That routine couldn't be prepared. Try a smaller routine with at least one action.") {
+    fun prepareShare(id: String, readable: Boolean = false) = action("That routine couldn't be prepared. Try a smaller routine with at least one action.") {
         val pack = repository.exportRoutine(id)
-        state.update { it.copy(packToShare = pack) }
+        state.update { it.copy(packToShare = pack, shareReadable = readable) }
     }
     fun writePack(uri: Uri) = action("The routine file couldn't be saved. Choose a writable folder and try again.") {
-        routineFiles.write(uri, requireNotNull(state.value.packToShare))
+        routineFiles.write(uri, requireNotNull(state.value.packToShare), state.value.shareReadable)
         state.update { it.copy(packToShare = null, message = "Routine file saved. You can send it using your Files app.") }
     }
     fun previewPack(uri: Uri) = action("That isn't a supported Aesthory routine file. Choose an exported routine file under 256 KB.") {
@@ -122,12 +155,6 @@ class MainViewModel(
         state.update { it.copy(packToImport = null, message = "Routine ready. Re-importing the same file won't add it twice.") }
     }
     fun dismissPacks() { state.update { it.copy(packToShare = null, packToImport = null) } }
-    fun addHabit(routineId: String, title: String, instructions: String, minutes: Int?, onSaved: () -> Unit) = action {
-        val category = repository.categories.first().firstOrNull()?.id
-            ?: repository.createCategory("General")
-        repository.addHabit(routineId, HabitDraft(title, category, HabitSchedule(LocalDate.now()), instructions, minutes))
-        onSaved()
-    }
     fun habits(routineId: String) = repository.habits(routineId)
     fun logHabit(id: String, input: CompletionInput, onSaved: () -> Unit = {}) = action {
         repository.recordCompletion(id, date.value, input); onSaved()

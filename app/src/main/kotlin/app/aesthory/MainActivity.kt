@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         viewModelFactory {
             initializer {
                 val app = application as AesthoryApplication
-                MainViewModel(app.repository, app.faceAnalyzer, app.offlineCoach, app.keys, app.groq, app.routineFiles, app.vault)
+                MainViewModel(app.repository, app.faceAnalyzer, app.offlineCoach, app.keys, app.groq, app.routineFiles, app.vault, app.referenceFiles)
             }
         }
     }

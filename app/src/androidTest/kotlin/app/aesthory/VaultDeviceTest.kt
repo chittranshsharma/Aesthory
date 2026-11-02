@@ -12,6 +12,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.aesthory.backup.PersonalVault
 import app.aesthory.data.AesthoryDatabase
 import app.aesthory.data.AesthoryRepository
+import app.aesthory.data.HabitDraft
+import app.aesthory.library.*
+import app.aesthory.routines.HabitSchedule
+import kotlinx.coroutines.flow.first
 import app.aesthory.profile.ProfileBaseline
 import app.aesthory.progress.*
 import java.io.File
@@ -40,6 +44,12 @@ class VaultDeviceTest {
         val day = LocalDate.of(2026, 10, 31)
         try {
             repo.saveProfile(ProfileBaseline(displayName = "Original"))
+            repo.saveProduct(ProductEntity("product", "Original product", labelNotes = "Label"))
+            repo.saveReference(ReferenceEntity("reference", "Source", "Private reference text"))
+            repo.addObservation("product", day, "Dated observation")
+            val category = repo.createCategory("Care")
+            val routine = repo.createRoutine("Routine")
+            val habit = repo.addHabit(routine, HabitDraft("Action", category, HabitSchedule(day), products = listOf(ProductChoice("product", "Use notes")), referenceIds = listOf("reference")))
             val source = File(context.cacheDir, "source.jpg")
             val bitmap = Bitmap.createBitmap(512, 768, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
             source.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it) }
@@ -67,11 +77,16 @@ class VaultDeviceTest {
             assertEquals(2, prepared.summary.photos); assertEquals(1, prepared.summary.binnedPhotos)
             vault.saveBackup(Uri.fromFile(backup), prepared.token)
             repo.saveProfile(ProfileBaseline(displayName = "Current"))
+            repo.saveProduct(ProductEntity("product", "Changed product"))
             vault.binPhoto(first.id, undo = true)
             val preview = vault.previewRestore(Uri.fromFile(backup), "test-only नमस्ते password".toCharArray())
             assertEquals("Current", db.records().getProfile()!!.displayName)
             vault.restoreBackup(preview.token)
             assertEquals("Original", db.records().getProfile()!!.displayName)
+            assertEquals("Original product", db.records().allProducts().single().name)
+            assertEquals("Dated observation", db.records().allObservations().single().note)
+            assertEquals("Private reference text", repo.links(habit, 1).first().references.single().content)
+            assertEquals("Use notes", repo.links(habit, 1).first().products.single().usageNote)
             val restored = db.records().allPhotos()
             assertEquals(original.map { it.id }.toSet(), restored.map { it.id }.toSet())
             assertEquals(1, restored.count { it.deletedAtMillis != null })
@@ -85,6 +100,7 @@ class VaultDeviceTest {
             File(context.cacheDir, "backup-work/${again.token}/$missing.jpg").delete()
             assertTrue(runCatching { vault.restoreBackup(again.token) }.isFailure)
             assertEquals(restored.toSet(), db.records().allPhotos().toSet())
+            assertEquals("Original product", db.records().allProducts().single().name)
             restored.forEach { photo -> assertTrue(File(context.filesDir, "progress-photos/${photo.fileKey}.jpg").isFile) }
             assertEquals(4, File(context.filesDir, "progress-photos").listFiles()!!.size)
             preferences.edit().clear().commit()

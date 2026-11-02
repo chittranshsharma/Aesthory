@@ -14,6 +14,7 @@ import androidx.room.Update
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.aesthory.progress.ProgressPhoto
+import app.aesthory.library.*
 import app.aesthory.coaching.CoachMode
 import app.aesthory.routines.HabitState
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +32,24 @@ class DatabaseConverters {
 
 @Dao
 interface AesthoryDao {
+    @Query("SELECT * FROM products ORDER BY name COLLATE NOCASE, id") fun observeProducts(): Flow<List<ProductEntity>>
+    @Query("SELECT * FROM products") suspend fun allProducts(): List<ProductEntity>
+    @Query("SELECT * FROM products WHERE id = :id") suspend fun getProduct(id: String): ProductEntity?
+    @Upsert suspend fun saveProduct(product: ProductEntity)
+    @Query("SELECT * FROM personal_references ORDER BY title COLLATE NOCASE, id") fun observeReferences(): Flow<List<ReferenceEntity>>
+    @Query("SELECT * FROM personal_references") suspend fun allReferences(): List<ReferenceEntity>
+    @Query("SELECT * FROM personal_references WHERE id = :id") suspend fun getReference(id: String): ReferenceEntity?
+    @Upsert suspend fun saveReference(reference: ReferenceEntity)
+    @Insert suspend fun insertObservation(observation: ProductObservation)
+    @Query("SELECT * FROM product_observations ORDER BY day DESC, createdAtMillis DESC, id") fun observeObservations(): Flow<List<ProductObservation>>
+    @Query("SELECT * FROM product_observations WHERE productId = :id ORDER BY day DESC, createdAtMillis DESC, id LIMIT 100") fun observationsFor(id: String): Flow<List<ProductObservation>>
+    @Query("SELECT * FROM product_observations") suspend fun allObservations(): List<ProductObservation>
+    @Insert suspend fun insertProductLink(link: HabitProductLink)
+    @Insert suspend fun insertReferenceLink(link: HabitReferenceLink)
+    @Query("SELECT * FROM habit_product_links WHERE habitId = :id AND version = :version ORDER BY name, productId") fun productLinks(id: String, version: Int): Flow<List<HabitProductLink>>
+    @Query("SELECT * FROM habit_reference_links WHERE habitId = :id AND version = :version ORDER BY title, referenceId") fun referenceLinks(id: String, version: Int): Flow<List<HabitReferenceLink>>
+    @Query("SELECT * FROM habit_product_links") suspend fun allProductLinks(): List<HabitProductLink>
+    @Query("SELECT * FROM habit_reference_links") suspend fun allReferenceLinks(): List<HabitReferenceLink>
     @Query("SELECT * FROM progress_photos ORDER BY day DESC, createdAtMillis DESC, id") fun observePhotos(): Flow<List<ProgressPhoto>>
     @Query("SELECT * FROM progress_photos") suspend fun allPhotos(): List<ProgressPhoto>
     @Insert suspend fun insertPhoto(photo: ProgressPhoto)
@@ -70,19 +89,36 @@ interface AesthoryDao {
     @Query("UPDATE habits SET state = :state WHERE id = :id") suspend fun setState(id: String, state: HabitState)
     @Insert suspend fun insertEvent(event: CompletionEventEntity): Long
     @Query("SELECT * FROM completion_events WHERE habitId = :habitId ORDER BY id") suspend fun getHistory(habitId: String): List<CompletionEventEntity>
+    @Query("SELECT * FROM completion_events WHERE habitId = :habitId ORDER BY id DESC LIMIT 200") suspend fun getRecentHistory(habitId: String): List<CompletionEventEntity>
     @Query("SELECT * FROM completion_events WHERE dateDay = :day ORDER BY id DESC") fun observeEventsOn(day: Long): Flow<List<CompletionEventEntity>>
 }
 
 @Database(
     entities = [ProfileEntity::class, MeasurementEntity::class, CategoryEntity::class,
-        RoutineEntity::class, HabitEntity::class, HabitVersionEntity::class, CompletionEventEntity::class, ProgressPhoto::class],
-    version = 2, exportSchema = true,
+        RoutineEntity::class, HabitEntity::class, HabitVersionEntity::class, CompletionEventEntity::class, ProgressPhoto::class,
+        ProductEntity::class, ReferenceEntity::class, ProductObservation::class, HabitProductLink::class, HabitReferenceLink::class],
+    version = 3, exportSchema = true,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class AesthoryDatabase : RoomDatabase() {
     abstract fun records(): AesthoryDao
 
     companion object {
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE habit_versions ADD COLUMN purpose TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE habit_versions ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
+                db.execSQL("ALTER TABLE habit_versions ADD COLUMN shortInstructions TEXT NOT NULL DEFAULT ''")
+                db.execSQL("CREATE TABLE products (id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, brand TEXT NOT NULL, kind TEXT NOT NULL, size TEXT NOT NULL, labelNotes TEXT NOT NULL, notes TEXT NOT NULL, url TEXT NOT NULL, openedDay INTEGER, expiryDay INTEGER, periodMonths INTEGER, stock TEXT NOT NULL, archived INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE personal_references (id TEXT NOT NULL PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL, url TEXT NOT NULL, sourceDay INTEGER, archived INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE product_observations (id TEXT NOT NULL PRIMARY KEY, productId TEXT NOT NULL, productName TEXT NOT NULL, day INTEGER NOT NULL, createdAtMillis INTEGER NOT NULL, note TEXT NOT NULL, FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE NO ACTION)")
+                db.execSQL("CREATE INDEX index_product_observations_productId ON product_observations(productId)")
+                db.execSQL("CREATE TABLE habit_product_links (habitId TEXT NOT NULL, version INTEGER NOT NULL, productId TEXT NOT NULL, name TEXT NOT NULL, brand TEXT NOT NULL, labelNotes TEXT NOT NULL, usageNote TEXT NOT NULL, PRIMARY KEY(habitId, version, productId), FOREIGN KEY(habitId, version) REFERENCES habit_versions(habitId, version) ON UPDATE NO ACTION ON DELETE NO ACTION, FOREIGN KEY(productId) REFERENCES products(id) ON UPDATE NO ACTION ON DELETE NO ACTION)")
+                db.execSQL("CREATE INDEX index_habit_product_links_productId ON habit_product_links(productId)")
+                db.execSQL("CREATE TABLE habit_reference_links (habitId TEXT NOT NULL, version INTEGER NOT NULL, referenceId TEXT NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, url TEXT NOT NULL, sourceDay INTEGER, PRIMARY KEY(habitId, version, referenceId), FOREIGN KEY(habitId, version) REFERENCES habit_versions(habitId, version) ON UPDATE NO ACTION ON DELETE NO ACTION, FOREIGN KEY(referenceId) REFERENCES personal_references(id) ON UPDATE NO ACTION ON DELETE NO ACTION)")
+                db.execSQL("CREATE INDEX index_habit_reference_links_referenceId ON habit_reference_links(referenceId)")
+            }
+        }
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS progress_photos (id TEXT NOT NULL, profileId INTEGER NOT NULL, day INTEGER NOT NULL, createdAtMillis INTEGER NOT NULL, area TEXT NOT NULL, view TEXT NOT NULL, note TEXT NOT NULL, fileKey TEXT NOT NULL, sha256 TEXT NOT NULL, byteCount INTEGER NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL, deletedAtMillis INTEGER, PRIMARY KEY(id), FOREIGN KEY(profileId) REFERENCES profiles(id) ON UPDATE NO ACTION ON DELETE NO ACTION)")
@@ -92,6 +128,6 @@ abstract class AesthoryDatabase : RoomDatabase() {
         }
         fun open(context: Context) = Room.databaseBuilder(
             context.applicationContext, AesthoryDatabase::class.java, "aesthory.db",
-        ).addMigrations(MIGRATION_1_2).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
     }
 }

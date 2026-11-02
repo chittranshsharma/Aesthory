@@ -85,7 +85,7 @@ Setup includes optional Groq enablement, masked key entry, a Get API key button 
 
 ## Proposed navigation
 
-Current navigation: Today, Coach, Routines, You. Coach holds built-in searchable guides and a separate photo-check action. You includes saved progress photos and Backup & restore; technical AI options remain collapsed. Products and references are later additions, not empty working destinations.
+Current navigation: Today, Coach, Routines, You. Coach holds built-in searchable guides and a separate photo-check action. You includes products/references, saved progress photos and Backup & restore; technical AI options remain collapsed. Routines includes a detailed action editor with optional sections, versioned product/reference links and saved-instruction history. See docs/HABITS.md for implemented fields and limits; running timers/reminders, product photos/barcodes/purchase details and PDF/image references remain later additions.
 
 ## Evidence and open decisions
 

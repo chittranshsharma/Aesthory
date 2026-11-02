@@ -28,7 +28,7 @@ class RoutinePacksTest {
         root.put("apiKey", "not-a-real-key")
         assertTrue(runCatching { RoutinePacks.decode(root.toString().toByteArray()) }.isFailure)
         root.remove("apiKey")
-        root.put("version", 2)
+        root.put("version", 3)
         assertTrue(runCatching { RoutinePacks.decode(root.toString().toByteArray()) }.isFailure)
     }
     @Test fun `fractional integers and invalid recurrence are rejected`() {

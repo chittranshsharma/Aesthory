@@ -24,8 +24,8 @@ class RoutineFiles(private val context: Context) {
         }
         RoutinePacks.decode(bytes)
     }
-    suspend fun write(uri: Uri, pack: RoutinePack) = withContext(Dispatchers.IO) {
-        val bytes = RoutinePacks.encode(pack)
+    suspend fun write(uri: Uri, pack: RoutinePack, readable: Boolean = false) = withContext(Dispatchers.IO) {
+        val bytes = if (readable) RoutinePacks.readableText(pack).toByteArray(Charsets.UTF_8) else RoutinePacks.encode(pack)
         requireNotNull(context.contentResolver.openOutputStream(uri, "wt")).use { it.write(bytes) }
     }
 }

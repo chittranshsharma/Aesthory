@@ -26,7 +26,7 @@ Build in this dependency order. Appearance coaching is the core; routines and tr
 
 ## 4. Sharing and recovery before extensive private data
 
-Routine JSON files and portable encrypted backup/restore are implemented. Full backups use password-derived authenticated streaming encryption, staged validation and transactional record replacement with independent photo files. Wrong-password, tamper, migration, rollback and native photo recovery checks pass; see BACKUPS.md. Readable routine text export remains pending.
+Routine JSON files, readable text plans and portable encrypted backup/restore are implemented. Full backups use password-derived authenticated streaming encryption, staged validation and transactional record replacement with independent photo files. Schema 3 includes libraries/versioned links and reads schema-2 backups from 0.3.0. Sharing excludes private library content. Wrong-password, tamper, migration, rollback and native recovery checks pass; see BACKUPS.md and HABITS.md.
 
 - Versioned routine JSON packs and readable text; selected public product/reference details only. Exclude API keys, private photos, nutrition, and completion history by default.
 - Validate size/schema/IDs/links; preview; import atomically into independent copies with explicit duplicate/category handling.
@@ -55,12 +55,16 @@ Local pilot delivered early: Photo Picker preview, bundled MediaPipe, capture ga
 
 ## 7. Detailed habit editor, timers, and reminders
 
+Detailed editor delivered: expandable sections, all six tracking types, day/interval schedules, optional estimates/categories/tags/reason/short variant, versioned links, partial/skip logging, reorder/pause/archive/recover and historical definitions. Time goals are entered in minutes and logged in seconds. Running timers, weekly targets, time-of-day intent and reminders remain pending.
+
 - Expandable tracking/reference/duration/instructions/schedule/category/product sections; shorter busy-day variants, reusable ordered routines, and all tracking types.
 - Weekly targets, local time intent, quiet hours, grouped reminders, snooze, reboot/timezone/DST, and permission/battery states.
 - Separate due logic from delivery. Persist timer anchors and derive elapsed time across process death.
 - Gate: complete/partial/skip/undo preserve history; timers survive restart; deterministic date tests plus real-device reminders. No exact-delivery promise for deferrable work.
 
 ## 8. Products and personal references
+
+Local library delivered: product name/brand/type/size, label/personal notes, web link, opening/expiry/label-month dates, stock and dated observations; text/Markdown references, source dates/links, bounded reviewed file import, search and archive/recovery. Habit snapshots and backups preserve old linked content after library edits. Purchase details, product photos/barcodes, PDF/image attachments, permanent library deletion and AI retrieval remain pending. See HABITS.md.
 
 - Product library with label dates/period after opening, stock, observations, optional purchase details, and links to instruction steps.
 - Local text/Markdown/selected attachments, search, original sources/dates, safe links, and retrieval permissions. PDF viewing and extracting usable text are separate capabilities.

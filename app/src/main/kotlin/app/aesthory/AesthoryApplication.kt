@@ -19,4 +19,5 @@ class AesthoryApplication : Application() {
     val groq by lazy { GroqConnection(keys) }
     val routineFiles by lazy { RoutineFiles(this) }
     val vault by lazy { PersonalVault(this, database) }
+    val referenceFiles by lazy { app.aesthory.library.ReferenceFiles(this) }
 }

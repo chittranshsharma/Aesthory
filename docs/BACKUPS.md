@@ -1,6 +1,6 @@
 # Backups and saved photos
 
-Aesthory 0.3.0 · format 1 / Room schema 2. No server, account or paid service is involved.
+Aesthory 0.4.0 · format 1 / Room schema 3; reads schema-2 backups from 0.3.0. No server, account or paid service is involved.
 
 ## Everyday use
 
@@ -12,7 +12,7 @@ Aesthory 0.3.0 · format 1 / Room schema 2. No server, account or paid service i
 
 ## Included and excluded
 
-The snapshot contains profile, measurements, categories, routines, habits, immutable instruction versions, dated completion events and photo metadata. All journal originals, including Recently deleted, are included. Thumbnails regenerate during restore.
+The snapshot contains profile, measurements, categories, routines, habits, immutable instruction versions, dated completion events, products, personal references, dated product observations, versioned link snapshots and photo metadata. Archived library entries and all journal originals, including Recently deleted, are included. Thumbnails regenerate during restore.
 
 API keys, Android Keystore material, imported language-model files, temporary analysis/drafts, ordinary preferences and last-backup status are excluded. Restore leaves existing keys/model files/preferences as they were on the destination phone. A new phone needs optional AI setup again.
 
@@ -24,7 +24,7 @@ The outer 32-byte header is big-endian: ASCII `AESTHBK1` (8 bytes), format `1` (
 
 PBKDF2-HMAC-SHA256 derives a 256-bit portable key from the exact password. Google Tink Android 1.23.0 `AesGcmHkdfStreaming` provides authenticated streaming encryption with HKDF-HMAC-SHA256, AES-256, 1 MiB segments and zero first-segment offset. The entire outer header is associated authenticated data; Tink supplies its own streaming header/nonces/segment authentication. This is the library's stream format, not a custom chunk cipher. Derived byte arrays and caller password arrays are cleared on completion/failure; this is not a guarantee of erasing immutable UI strings or all runtime copies from RAM.
 
-The authenticated payload is a ZIP containing exactly `records.json` plus `photos/<canonical-UUID>.jpg` for every metadata row. SHA-256, byte length and decoded dimensions must match. No external keyset or device-only key is required. Password strength matters for offline guessing; there is no external security-audit claim.
+The authenticated payload is a ZIP containing exactly `records.json` plus `photos/<canonical-UUID>.jpg` for every metadata row. SHA-256, byte length and decoded dimensions must match. No external keyset or device-only key is required. Password strength matters for offline guessing; there is no external security-audit claim. Schema-2 records upgrade with empty library tables and default new habit fields before validation; future schemas are rejected. Schema-3 backups require app 0.4.0 or later.
 
 Sources: [Tink releases](https://github.com/tink-crypto/tink-java/releases), [streaming implementation](https://github.com/tink-crypto/tink-java/blob/main/src/main/java/com/google/crypto/tink/subtle/AesGcmHkdfStreaming.java), [Android cryptography guidance](https://developer.android.com/privacy-and-security/cryptography), [OWASP PBKDF2 guidance](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 

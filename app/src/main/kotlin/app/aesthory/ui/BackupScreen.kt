@@ -21,14 +21,14 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 @Composable
-internal fun BackupScreen(model: MainViewModel, onBack: () -> Unit) {
+internal fun BackupScreen(model: MainViewModel, backLabel: String = "Back to you", onBack: () -> Unit) {
     val state by model.ui.collectAsStateWithLifecycle()
     val lastBackup by model.lastBackupMillis.collectAsStateWithLifecycle()
     var creating by remember { mutableStateOf(false) }
     val save = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri -> if (uri != null) model.saveBackup(uri) }
     val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) model.chooseRestore(uri) }
     Page {
-        TextButton(onClick = onBack) { Text(if (state.profile != null) "Back to you" else "Back to setup") }
+        TextButton(onClick = onBack) { Text(backLabel) }
         Text("Keep your progress safe.", style = MaterialTheme.typography.displaySmall)
         Text("Save a password-protected copy of your records and photos. You choose where the file goes.")
         if (state.restoreComplete) {
@@ -41,7 +41,7 @@ internal fun BackupScreen(model: MainViewModel, onBack: () -> Unit) {
         }
         if (state.profile != null) {
         SectionHeading("Make a backup")
-        Text("Includes your profile, measurements, routines, past check-ins and progress photos—including Recently deleted. API keys and extra AI model files are left out.")
+        Text("Includes your profile, measurements, routines, check-ins, products, references and photos—including Recently deleted. API keys and extra AI model files are left out.")
         lastBackup?.let { Text("Last saved on this phone: ${backupDate(it)}", style = MaterialTheme.typography.bodySmall) }
         Button(enabled = !state.busy, onClick = { creating = true }) { Text("Make a backup") }
         state.backup?.let { ready ->
@@ -86,7 +86,7 @@ internal fun BackupScreen(model: MainViewModel, onBack: () -> Unit) {
             text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Made ${backupDate(preview.summary.createdAtMillis)}")
                 BackupCounts(preview.summary)
-                Text("This will replace the profile, routines, check-ins, measurements and saved photos currently in the app. It won't change your AI key or extra model files.")
+                Text("This replaces your current profile, routines, check-ins, measurements, products, references and photos. It won't change your AI key or extra model files.")
                 Text("If you need your current records too, save a backup of them first.")
                 if (state.busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Restoring your records and photos…") }
             } },
@@ -103,5 +103,6 @@ private fun backupDate(millis: Long): String {
 @Composable
 private fun BackupCounts(summary: BackupSummary) {
     Text("${summary.routines} routines · ${summary.checkIns} check-ins · ${summary.photos} photos")
+    Text("${summary.products} products · ${summary.references} references")
     if (summary.binnedPhotos > 0) Text("${summary.binnedPhotos} of those photos are in Recently deleted.", style = MaterialTheme.typography.bodySmall)
 }

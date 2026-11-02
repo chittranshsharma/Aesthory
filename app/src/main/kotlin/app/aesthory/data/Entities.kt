@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
 import app.aesthory.profile.AgeBand
 import app.aesthory.profile.BodyMeasurements
 import app.aesthory.profile.CoachingTone
@@ -110,6 +111,9 @@ data class HabitVersionEntity(
     val estimatedMinutes: Int?,
     @Embedded(prefix = "schedule_") val schedule: StoredSchedule,
     @Embedded(prefix = "tracking_") val tracking: TrackingSettings,
+    @ColumnInfo(defaultValue = "''") val purpose: String = "",
+    @ColumnInfo(defaultValue = "'[]'") val tags: List<String> = emptyList(),
+    @ColumnInfo(defaultValue = "''") val shortInstructions: String = "",
 )
 
 data class CurrentHabit(

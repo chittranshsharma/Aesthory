@@ -8,6 +8,7 @@ Android appearance-coaching app: skin, hair, facial aesthetics, physique, and pe
 - `PRODUCT.md` holds requirements; `docs/RESEARCH.md` holds dated external evidence.
 - Setup/profile work: `docs/ONBOARDING_SPEC.md`. AI/image work: `docs/COACHING_SPEC.md`; load only the selected coach's prompt asset.
 - Backup/photo persistence work: `docs/BACKUPS.md` describes format, limits and recovery invariants.
+- Habit/editor/library work: `docs/HABITS.md` covers versioned links, import/sharing boundaries and current limits.
 - Use `rg` and targeted reads. Do not reload the entire repo, chat, or all skills.
 - Update status once per completed milestone: changes, actual checks, blockers, next action.
 - Do not delegate unless the user or an applicable instruction authorizes it.
