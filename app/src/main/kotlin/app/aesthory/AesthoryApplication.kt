@@ -20,4 +20,5 @@ class AesthoryApplication : Application() {
     val routineFiles by lazy { RoutineFiles(this) }
     val vault by lazy { PersonalVault(this, database) }
     val referenceFiles by lazy { app.aesthory.library.ReferenceFiles(this) }
+    val timing by lazy { app.aesthory.timing.TimingController(database, app.aesthory.timing.AndroidTimingClock(this), app.aesthory.timing.AndroidTimingDelivery(this)) }
 }

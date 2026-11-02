@@ -106,7 +106,7 @@ private fun HabitEditorForm(model: MainViewModel, routineId: String, existing: C
                 })
             }
             if (input.kind == TrackingKind.VALUE) OutlinedTextField(input.unit, { input = input.copy(unit = it.take(40)) }, label = { Text("Unit, such as cm or kg") }, modifier = Modifier.fillMaxWidth())
-            if (input.kind == TrackingKind.DURATION) Text("You'll log the time you spent. A running timer is coming later.")
+            if (input.kind == TrackingKind.DURATION) Text("Start a running timer from your action, or log time manually. The timer keeps going when you close the app.")
             errors["tracking"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
         EditorSection("Time & category", input.minutes.takeIf { it.isNotBlank() }?.let { "About " + it + " minutes" } ?: "Optional time estimate and a place to keep it") {

@@ -15,6 +15,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.aesthory.progress.ProgressPhoto
 import app.aesthory.library.*
+import app.aesthory.timing.*
 import app.aesthory.coaching.CoachMode
 import app.aesthory.routines.HabitState
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +33,25 @@ class DatabaseConverters {
 
 @Dao
 interface AesthoryDao {
+    @Query("SELECT * FROM active_timer WHERE id = 1") fun observeTimer(): Flow<ActiveTimer?>
+    @Query("SELECT * FROM active_timer WHERE id = 1") suspend fun getTimer(): ActiveTimer?
+    @Query("SELECT * FROM active_timer") suspend fun allTimers(): List<ActiveTimer>
+    @Upsert suspend fun saveTimer(timer: ActiveTimer)
+    @Query("DELETE FROM active_timer") suspend fun clearTimer()
+    @Query("SELECT * FROM habit_reminders ORDER BY habitId") fun observeReminders(): Flow<List<HabitReminder>>
+    @Query("SELECT * FROM habit_reminders") suspend fun allReminders(): List<HabitReminder>
+    @Query("SELECT * FROM habit_reminders WHERE habitId = :id") suspend fun getReminder(id: String): HabitReminder?
+    @Upsert suspend fun saveReminder(reminder: HabitReminder)
+    @Query("SELECT * FROM reminder_preferences WHERE id = 1") fun observeReminderPreferences(): Flow<ReminderPreferences?>
+    @Query("SELECT * FROM reminder_preferences WHERE id = 1") suspend fun getReminderPreferences(): ReminderPreferences?
+    @Query("SELECT * FROM reminder_preferences") suspend fun allReminderPreferences(): List<ReminderPreferences>
+    @Upsert suspend fun saveReminderPreferences(preferences: ReminderPreferences)
+    @Query("SELECT * FROM reminder_runtime WHERE habitId = :id") suspend fun reminderRuntime(id: String): ReminderRuntime?
+    @Query("SELECT * FROM reminder_runtime") suspend fun allReminderRuntime(): List<ReminderRuntime>
+    @Query("SELECT v.*, h.position, h.state, h.routineId, r.archived AS routineArchived FROM habit_versions v JOIN habits h ON v.habitId = h.id AND v.version = h.currentVersion JOIN routines r ON r.id = h.routineId ORDER BY r.createdAtMillis, r.id, h.position, h.id")
+    fun observeReminderActions(): Flow<List<ReminderAction>>
+    @Upsert suspend fun saveReminderRuntime(runtime: ReminderRuntime)
+    @Query("DELETE FROM reminder_runtime") suspend fun clearReminderRuntime()
     @Query("SELECT * FROM products ORDER BY name COLLATE NOCASE, id") fun observeProducts(): Flow<List<ProductEntity>>
     @Query("SELECT * FROM products") suspend fun allProducts(): List<ProductEntity>
     @Query("SELECT * FROM products WHERE id = :id") suspend fun getProduct(id: String): ProductEntity?
@@ -90,20 +110,32 @@ interface AesthoryDao {
     @Insert suspend fun insertEvent(event: CompletionEventEntity): Long
     @Query("SELECT * FROM completion_events WHERE habitId = :habitId ORDER BY id") suspend fun getHistory(habitId: String): List<CompletionEventEntity>
     @Query("SELECT * FROM completion_events WHERE habitId = :habitId ORDER BY id DESC LIMIT 200") suspend fun getRecentHistory(habitId: String): List<CompletionEventEntity>
+    @Query("SELECT * FROM completion_events WHERE habitId = :id AND dateDay BETWEEN :fromDay AND :untilDay ORDER BY id DESC") suspend fun eventsBetween(id: String, fromDay: Long, untilDay: Long): List<CompletionEventEntity>
     @Query("SELECT * FROM completion_events WHERE dateDay = :day ORDER BY id DESC") fun observeEventsOn(day: Long): Flow<List<CompletionEventEntity>>
 }
 
 @Database(
     entities = [ProfileEntity::class, MeasurementEntity::class, CategoryEntity::class,
         RoutineEntity::class, HabitEntity::class, HabitVersionEntity::class, CompletionEventEntity::class, ProgressPhoto::class,
-        ProductEntity::class, ReferenceEntity::class, ProductObservation::class, HabitProductLink::class, HabitReferenceLink::class],
-    version = 3, exportSchema = true,
+        ProductEntity::class, ReferenceEntity::class, ProductObservation::class, HabitProductLink::class, HabitReferenceLink::class,
+        ActiveTimer::class, HabitReminder::class, ReminderPreferences::class, ReminderRuntime::class],
+    version = 4, exportSchema = true,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class AesthoryDatabase : RoomDatabase() {
     abstract fun records(): AesthoryDao
 
     companion object {
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE completion_events ADD COLUMN timedSeconds INTEGER DEFAULT NULL")
+                db.execSQL("CREATE TABLE active_timer (id INTEGER NOT NULL PRIMARY KEY, sessionId TEXT NOT NULL, habitId TEXT NOT NULL, definitionVersion INTEGER NOT NULL, day INTEGER NOT NULL, accumulatedMillis INTEGER NOT NULL, startedElapsedMillis INTEGER, startedWallMillis INTEGER, boot INTEGER NOT NULL, goalMillis INTEGER, goalAlerted INTEGER NOT NULL, recovery TEXT NOT NULL, FOREIGN KEY(habitId, definitionVersion) REFERENCES habit_versions(habitId, version) ON UPDATE NO ACTION ON DELETE NO ACTION)")
+                db.execSQL("CREATE INDEX index_active_timer_habitId_definitionVersion ON active_timer(habitId, definitionVersion)")
+                db.execSQL("CREATE TABLE habit_reminders (habitId TEXT NOT NULL PRIMARY KEY, minuteOfDay INTEGER NOT NULL, enabled INTEGER NOT NULL, FOREIGN KEY(habitId) REFERENCES habits(id) ON UPDATE NO ACTION ON DELETE NO ACTION)")
+                db.execSQL("CREATE TABLE reminder_preferences (id INTEGER NOT NULL PRIMARY KEY, quietEnabled INTEGER NOT NULL, quietStart INTEGER NOT NULL, quietEnd INTEGER NOT NULL, paused INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE reminder_runtime (habitId TEXT NOT NULL PRIMARY KEY, nextAtMillis INTEGER, nextDay INTEGER, token TEXT NOT NULL, snoozed INTEGER NOT NULL, deliveredDay INTEGER, deliveredToken TEXT, FOREIGN KEY(habitId) REFERENCES habit_reminders(habitId) ON UPDATE NO ACTION ON DELETE NO ACTION)")
+            }
+        }
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE habit_versions ADD COLUMN purpose TEXT NOT NULL DEFAULT ''")
@@ -128,6 +160,6 @@ abstract class AesthoryDatabase : RoomDatabase() {
         }
         fun open(context: Context) = Room.databaseBuilder(
             context.applicationContext, AesthoryDatabase::class.java, "aesthory.db",
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
     }
 }

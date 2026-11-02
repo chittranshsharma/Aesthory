@@ -35,6 +35,7 @@ internal fun repeatLabel(schedule: HabitSchedule, locale: Locale): String = when
 internal fun TodayScreen(model: MainViewModel, onRoutines: () -> Unit, onAnalyze: () -> Unit) {
     val items by model.today.collectAsStateWithLifecycle()
     val state by model.ui.collectAsStateWithLifecycle()
+    val timer by model.activeTimer.collectAsStateWithLifecycle()
     val guidance = guideToday(items)
     var logging by remember { mutableStateOf<CurrentHabit?>(null) }
     val haptic = LocalHapticFeedback.current
@@ -56,7 +57,9 @@ internal fun TodayScreen(model: MainViewModel, onRoutines: () -> Unit, onAnalyze
                 }
                 guidance.next?.let { next ->
                     Text(next.habit.definition.title, style = MaterialTheme.typography.titleLarge)
-                    Button(enabled = !state.busy, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary, contentColor = MaterialTheme.colorScheme.primary), onClick = { complete(next.habit) }) { Text(if (next.habit.definition.tracking.kind == TrackingKind.CHECKBOX) "Did it!" else "Check in") }
+                    Button(enabled = !state.busy, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onPrimary, contentColor = MaterialTheme.colorScheme.primary), onClick = {
+                        if (next.habit.definition.tracking.kind == TrackingKind.DURATION) { if (timer == null) model.startTimer(next.habit.definition.habitId) else model.requestTimer() } else complete(next.habit)
+                    }) { Text(if (next.habit.definition.tracking.kind == TrackingKind.DURATION) { if (timer == null) "Start timer" else "Open timer" } else if (next.habit.definition.tracking.kind == TrackingKind.CHECKBOX) "Did it!" else "Check in") }
                 }
             }
         }
@@ -82,6 +85,8 @@ internal fun TodayScreen(model: MainViewModel, onRoutines: () -> Unit, onAnalyze
                     if (expanded) {
                         Text(item.habit.definition.instructions.ifBlank { "Make this action yours. You can add instructions in your routine." }, modifier = Modifier.padding(start = 48.dp, bottom = 8.dp))
                         TextButton(enabled = !state.busy, onClick = { model.logHabit(item.habit.definition.habitId, CompletionInput(CompletionStatus.SKIPPED)) }) { Text("Skip today") }
+                        StartTimerButton(model, item.habit.definition.habitId)
+                        ActionReminderButton(model, item.habit.definition.habitId)
                     }
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

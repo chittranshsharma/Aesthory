@@ -9,6 +9,8 @@ import app.aesthory.coaching.StarterRoutine
 import app.aesthory.data.AesthoryRepository
 import app.aesthory.data.HabitDraft
 import app.aesthory.library.*
+import app.aesthory.timing.*
+import kotlinx.coroutines.flow.map
 import app.aesthory.data.ProfileEntity
 import app.aesthory.face.AnalyzedPhoto
 import app.aesthory.face.FaceReview
@@ -42,6 +44,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class AppState(
+    val timingStatus: TimingStatus = TimingStatus(false, false, false, false),
+    val openTimerRequest: Int = 0,
+    val openTodayRequest: Int = 0,
+    val timerReviewSession: String? = null,
     val openEditors: Int = 0,
     val referenceImport: String? = null,
     val shareReadable: Boolean = false,
@@ -76,6 +82,7 @@ class MainViewModel(
     private val routineFiles: RoutineFiles,
     private val vault: PersonalVault,
     private val referenceFiles: ReferenceFiles,
+    private val timing: TimingController,
 ) : ViewModel() {
     private val state = MutableStateFlow(AppState())
     val ui = state.asStateFlow()
@@ -83,6 +90,43 @@ class MainViewModel(
     val measurements = repository.measurements.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val progressPhotos = vault.photos.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val lastBackupMillis = vault.lastBackupMillis
+    val activeTimer = timing.timer.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val reminders = timing.reminders.stateIn<List<HabitReminder>?>(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val reminderPreferences = timing.preferences.map { it ?: ReminderPreferences() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReminderPreferences())
+    val reminderActions = repository.reminderActions.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    fun timingNow() = timing.clock.now()
+    suspend fun timerDefinition(timer: ActiveTimer) = repository.definition(timer.habitId, timer.definitionVersion)
+    fun refreshTiming() { viewModelScope.launch {
+        try { timing.refresh(); state.update { it.copy(timingStatus = timing.status()) } }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { state.update { it.copy(message = "Timer and reminder alerts couldn't be refreshed. Your saved timer is still here.") } }
+    } }
+    fun startTimer(id: String) = action("That timer couldn't start. Try again after checking your saved action.") {
+        val now = timing.clock.now()
+        timing.start(id, java.time.Instant.ofEpochMilli(now.wall).atZone(now.zone).toLocalDate())
+        requestTimer()
+    }
+    fun pauseTimer(session: String) = action { timing.pause(session) }
+    fun resumeTimer(session: String) = action { timing.resume(session) }
+    fun discardTimer(session: String) = action { timing.discard(session); state.update { it.copy(timerReviewSession = null) } }
+    fun reviewTimer(session: String) = action { timing.pause(session); state.update { it.copy(timerReviewSession = session) } }
+    fun dismissTimerReview() { state.update { it.copy(timerReviewSession = null) } }
+    fun finishTimer(session: String, seconds: Long, day: LocalDate, input: CompletionInput) = action("That timed check-in couldn't be saved. Check the entries; your timer is still saved.") {
+        timing.finish(session, seconds, day, input)
+        state.update { it.copy(timerReviewSession = null, message = "Timed check-in saved.") }
+    }
+    fun checkTimerGoal(session: String) { viewModelScope.launch { try { timing.goalReached(session) } catch (cancelled: CancellationException) { throw cancelled } catch (_: Exception) { } } }
+    fun saveReminder(rule: HabitReminder, saved: () -> Unit) = action { timing.saveReminder(rule); state.update { it.copy(timingStatus = timing.status()) }; saved() }
+    fun saveReminderPreferences(prefs: ReminderPreferences) = action { timing.savePreferences(prefs); state.update { it.copy(timingStatus = timing.status()) } }
+    fun testReminder() { notifyUser(if (timing.sendTest()) "Test notification sent. Check your notification shade." else "Notifications couldn't be sent. Check your phone's notification settings.") }
+    fun requestTimer() {
+        if (state.value.openEditors > 0) notifyUser("Your timer is ready. Save or leave this draft first, then open the timer.")
+        else state.update { it.copy(openTimerRequest = it.openTimerRequest + 1) }
+    }
+    fun requestToday() {
+        if (state.value.openEditors > 0) notifyUser("Your reminder is ready. Save or leave this draft first, then open Today.")
+        else state.update { it.copy(openTodayRequest = it.openTodayRequest + 1) }
+    }
     val categories = repository.categories.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val products = repository.products.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val references = repository.references.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -107,6 +151,7 @@ class MainViewModel(
     }
     fun saveHabitDetails(routineId: String, id: String?, draft: HabitDraft, saved: () -> Unit) = action("That action couldn't be saved. Check your entries and try again.") {
         if (id == null) repository.addHabit(routineId, draft) else repository.editHabit(id, draft)
+        timing.refresh()
         saved()
     }
     fun moveHabit(id: String, direction: Int) = action { repository.moveHabit(id, direction) }
@@ -116,6 +161,7 @@ class MainViewModel(
     private var work: Job? = null
 
     init {
+        refreshTiming()
         viewModelScope.launch { repository.profile.collect { profile -> state.update { it.copy(loaded = true, profile = profile) } } }
         refreshCredentials()
         viewModelScope.launch {
@@ -124,7 +170,8 @@ class MainViewModel(
         }
     }
 
-    fun refreshDate() { date.value = LocalDate.now() }
+    fun refreshCalendarDate() { date.value = LocalDate.now() }
+    fun refreshDate() { refreshCalendarDate(); refreshTiming() }
     fun clearMessage() { state.update { it.copy(message = null, undoPhotoId = null) } }
     fun saveProfile(profile: ProfileBaseline, onSaved: () -> Unit = {}) = action {
         repository.saveProfile(profile)
@@ -136,8 +183,8 @@ class MainViewModel(
         repository.addStarter(starter, date.value)
         state.update { it.copy(message = "${starter.name} is ready in your routines.") }
     }
-    fun archiveRoutine(id: String) = action { repository.archiveRoutine(id) }
-    fun setHabitState(id: String, habitState: app.aesthory.routines.HabitState) = action { repository.setHabitState(id, habitState) }
+    fun archiveRoutine(id: String) = action { repository.archiveRoutine(id); timing.refresh() }
+    fun setHabitState(id: String, habitState: app.aesthory.routines.HabitState) = action { repository.setHabitState(id, habitState); timing.refresh() }
     fun prepareShare(id: String, readable: Boolean = false) = action("That routine couldn't be prepared. Try a smaller routine with at least one action.") {
         val pack = repository.exportRoutine(id)
         state.update { it.copy(packToShare = pack, shareReadable = readable) }
@@ -157,9 +204,9 @@ class MainViewModel(
     fun dismissPacks() { state.update { it.copy(packToShare = null, packToImport = null) } }
     fun habits(routineId: String) = repository.habits(routineId)
     fun logHabit(id: String, input: CompletionInput, onSaved: () -> Unit = {}) = action {
-        repository.recordCompletion(id, date.value, input); onSaved()
+        repository.recordCompletion(id, date.value, input); timing.refresh(); onSaved()
     }
-    fun undo(id: String) = action { repository.undoCompletion(id, date.value) }
+    fun undo(id: String) = action { repository.undoCompletion(id, date.value); timing.refresh() }
 
     fun beginPhoto(uri: Uri) { state.update { it.copy(photoSource = uri, saveAnalyzedPhoto = false, editingPhoto = null, message = null) } }
     fun beginAnalyzedPhoto() { if (state.value.photo != null) state.update { it.copy(photoSource = null, saveAnalyzedPhoto = true, editingPhoto = null, message = null) } }
@@ -213,7 +260,8 @@ class MainViewModel(
     fun restoreBackup() = action("The restore couldn't finish. Your current records are unchanged. Open the backup again to retry.") {
         state.update { it.copy(canCancel = false) }
         try {
-            vault.restoreBackup(requireNotNull(state.value.restorePreview).token)
+            timing.prepareForRestore()
+            try { vault.restoreBackup(requireNotNull(state.value.restorePreview).token) } finally { timing.refresh() }
             state.update { it.copy(restorePreview = null, restoreComplete = true, photo = null, offlineText = null, editingPhoto = null, photoSource = null, saveAnalyzedPhoto = false, message = "Your backup is restored.") }
         } finally { state.update { it.copy(restorePreview = null) } }
     }

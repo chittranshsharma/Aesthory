@@ -1,30 +1,29 @@
 # Status
 
-2026-11-02 · Aesthory 0.4.0 · Android only · target phone 8 GB+ RAM; exact hardware unknown.
+2026-11-02 · Aesthory 0.5.0 · Android only · target phone 8 GB+ RAM; exact hardware unknown.
 
 ## Done
 
-- Added a detailed action editor under Routines → Details → Edit action. Optional sections cover instructions/reason/busy-day version, dates/selected weekdays/day intervals, all six tracking types, duration estimate, categories, tags, products and references. Save stays visible; Back protects unsaved changes.
-- Added You → Products & references, also reachable while editing a habit. Reusable products hold brand/type/size, label/personal notes, links, opening/expiry/label-month dates, stock and dated observations. Notes/links support source dates, reviewed UTF-8 text/Markdown file import, search and archive/recovery.
-- Saved habit versions snapshot linked details, so later library edits never rewrite past instructions. Added partial/skip logging, ordering, pause/archive/recover and a history viewer with the original steps and linked content. Dated observations keep the product name used at the time.
-- Added readable routine text plans. JSON/text sharing retains routine definitions and excludes library content, observations and private history. Existing version-1 pack fingerprints stay stable; richer definitions use pack version 2.
-- Added non-destructive Room v1→v2→v3 migrations. Full encrypted backups now include libraries, observations and link snapshots; v0.3.0 backups still restore. Preserved saved photos, everyday built-in coaching and optional AI settings.
+- Added one running timer with Pause/Resume, goal alerts and a persistent timer strip. Saved clock anchors survive closing/restarting the app without a background service. Phone-reboot recovery pauses an explicitly labelled estimate for review.
+- Finish & review lets you correct the time, date and result before saving once against the original action instructions. Goals never auto-complete actions. History includes the actual timed duration; discard asks first.
+- Added per-action local reminders, native time pickers, quiet hours, pause-all, grouped notifications and Snooze 10 min. You → Reminders & timers explains permissions, offers a test notification and optional precise timer-alert settings. Notification controls and taps work outside the app.
+- Added Room v3→v4 migration and older-backup compatibility. Encrypted exports freeze a paused timer copy without stopping the live timer; restores keep the timer and reminder delivery paused for review. Runtime alarms/tokens and OS permissions stay device-only. Routine packs exclude personal timing state.
+- Retained detailed action editing, products/references, historical snapshots, routine sharing, saved progress photos, encrypted backups and built-in coaching. See HABITS.md, BACKUPS.md and TIMING.md for contracts and limits.
 
 ## Verified
 
-- **88 unit tests passed**, zero failures/errors. New cases cover historical snapshots, edit rollback, ordering/state recovery, library backup/sharing exclusions, original-v2 migration/backup compatibility, file/URL validation and time-goal roundtrips.
-- **4 Android tests passed** on the owned API35 x86_64 emulator. Extended vault coverage restores products, references, observations and use notes alongside photos while preserving keys/models and failed-restore recovery. Final rerun used instrumentation directly to retain manual test fixtures.
-- Final debug/test APK assembly and lint passed: **0 errors, 16 warnings** (existing update/icon/KTX/storage refinements; no suppressions).
-- Native manual flows: actual v0.3.0 backup recovery; product creation; Markdown picker/import/review; linked habit creation; rotation with draft retained; partial/full checklist logging; history after tracking edits; product observation/archive/bring back; readable text export through the save picker; dirty Back/discard; force-stop/relaunch retention.
-- Light/dark phone captures and 1.3× text checked. Fixed clipped section labels, kept Save visible, made checklist rows tappable, and added spacing between wrapped choices. Independent finish review: ship, with the spacing fix confirmed. Photos/captures and test files remain ignored.
-- GitHub Actions runs unit/lint/build checks and uploads a debug APK after successful pushes. Emulator results are not physical-phone benchmarks or a complete accessibility audit.
+- **105 unit tests passed**, zero failures/errors: clocks/restarts, pause/resume, atomic and duplicate saves, simultaneous reminders, snooze/stale callbacks, completion suppression, quiet hours, DST/timezones, migration and paused backup recovery.
+- **5 Android tests passed** on the owned API35 x86_64 emulator. Real notification PendingIntents exercise Pause/Resume, reminder delivery and Snooze; vault tests cover encrypted timer/reminder restoration alongside existing photo/library recovery.
+- Debug/test APK assembly and lint passed: **0 errors, 22 warnings** (dependency-update, icon, KTX and storage refinements; no suppressions).
+- Native manual checks: running time continued after force-stop/reopen; paused time stayed fixed; actual emulator reboot recovered a paused estimate. Reviewed and saved a corrected 47-second check-in. Test notification appeared and opened Today; saved reminder time persisted; notification-off state and Android permission request worked. Pause-all, native time picker, light/dark and 1.3× text checked.
+- GitHub Actions checks unit tests/lint/build and uploads a debug APK. Captures, private records, backups and optional weights remain ignored. Emulator results establish neither physical-phone performance nor delivery reliability; full TalkBack/domain review remains pending.
 
 ## Next
 
-1. Running timers, weekly targets and local reminders; preserve timer state across restart and handle notification/timezone/battery conditions.
-2. Nutrition screenshot review, then Hevy file import and Health Connect per IMPLEMENTATION_PLAN.md. A real calorie-app screenshot/export will be needed for layout-specific validation.
+1. Weekly targets and a plain-language weekly review: show real completions/time and distinguish missing records from zero; preserve history and timezone/week boundaries.
+2. Nutrition screenshot → local OCR → editable review → explicit save, then Hevy file import and Health Connect. A real calorie-app screenshot/export will be needed for layout-specific validation.
 
-Limits: time spent is logged manually; no running timer/reminder yet. References support text/Markdown and links, not PDF/image attachments or live Notion/Obsidian sync. Product photos/barcodes/purchase details, permanent library deletion, AI retrieval/generation, optional-weight evaluation, physical-phone benchmarks and full TalkBack/domain review remain pending. Archived library content remains stored and backed up. See HABITS.md and BACKUPS.md for bounds and recovery behavior.
+Limits: one timer, seven-day timer cap, 100 enabled action reminders. Android may delay alerts; force-stop blocks them until reopening. References support text/Markdown and links, not PDF/image attachments or live Notion/Obsidian sync. Product photos/barcodes, permanent library deletion, AI retrieval/generation, optional-weight evaluation and physical-phone benchmarks remain pending.
 
 ## Checks
 
@@ -37,4 +36,4 @@ $env:JAVA_HOME = Join-Path $env:USERPROFILE '.cache\ritloom\jdk-21.0.13+9'
 .\gradlew.bat :app:connectedDebugAndroidTest
 ```
 
-Reports: `app/build/reports/`; APK: `app/build/outputs/apk/debug/app-debug.apk`. Keep this report to current done/verified/next; task-specific details live in HABITS.md.
+Reports: `app/build/reports/`; APK: `app/build/outputs/apk/debug/app-debug.apk`. Keep this report to current done/verified/next; feature details live in the linked guides.

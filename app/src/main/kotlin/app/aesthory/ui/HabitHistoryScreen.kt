@@ -73,6 +73,7 @@ internal fun HabitHistoryScreen(model: MainViewModel, id: String, onBack: () -> 
                 })
             }
             if (event.checkedItems.isNotEmpty()) Text(event.checkedItems.joinToString("\n") { definition.tracking.items[it] })
+            event.timedSeconds?.let { seconds -> Text("Timer: " + app.aesthory.timing.formatTimer(seconds * 1000), style = MaterialTheme.typography.bodySmall) }
             TextButton(onClick = { open = !open }) { Text(if (open) "Hide saved instructions" else "See saved instructions") }
             if (open) {
                 Text(definition.instructions.ifBlank { "No instructions added." })

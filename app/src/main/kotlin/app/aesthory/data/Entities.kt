@@ -140,4 +140,5 @@ data class CompletionEventEntity(
     val status: CompletionStatus,
     val value: Double?,
     val checkedItems: List<Int>,
+    @ColumnInfo(defaultValue = "NULL") val timedSeconds: Long? = null,
 )

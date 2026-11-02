@@ -51,6 +51,7 @@ class AesthoryRepository(private val db: AesthoryDatabase, private val clock: Cl
     val measurements = dao.observeMeasurements()
     val routines = dao.observeRoutines()
     val categories = dao.observeCategories()
+    val reminderActions = dao.observeReminderActions()
     val products = dao.observeProducts()
     val references = dao.observeReferences()
     val observations = dao.observeObservations()

@@ -55,7 +55,7 @@ Local pilot delivered early: Photo Picker preview, bundled MediaPipe, capture ga
 
 ## 7. Detailed habit editor, timers, and reminders
 
-Detailed editor delivered: expandable sections, all six tracking types, day/interval schedules, optional estimates/categories/tags/reason/short variant, versioned links, partial/skip logging, reorder/pause/archive/recover and historical definitions. Time goals are entered in minutes and logged in seconds. Running timers, weekly targets, time-of-day intent and reminders remain pending.
+Detailed editor and timers/reminders delivered: all six tracking types, optional detail sections, versioned links/history, manual/timed check-ins, ordering/state recovery, persistent timer anchors, explicit review, local reminder times, quiet hours, snooze and permission/reboot/timezone handling. Backups restore paused timer/reminder state. Weekly targets and measured physical-phone delivery/performance remain pending. See TIMING.md.
 
 - Expandable tracking/reference/duration/instructions/schedule/category/product sections; shorter busy-day variants, reusable ordered routines, and all tracking types.
 - Weekly targets, local time intent, quiet hours, grouped reminders, snooze, reboot/timezone/DST, and permission/battery states.

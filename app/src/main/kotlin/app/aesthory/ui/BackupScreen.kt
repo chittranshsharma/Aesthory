@@ -35,13 +35,13 @@ internal fun BackupScreen(model: MainViewModel, backLabel: String = "Back to you
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Your backup is restored.", style = MaterialTheme.typography.headlineMedium)
-                    Text("Your saved records and photos are ready. Your AI key and extra model files stay as they were on this phone.")
+                    Text("Your saved records are ready. Restored timers and reminders are paused. Your AI key and extra model files stay as they were on this phone.")
                 }
             }
         }
         if (state.profile != null) {
         SectionHeading("Make a backup")
-        Text("Includes your profile, measurements, routines, check-ins, products, references and photos—including Recently deleted. API keys and extra AI model files are left out.")
+        Text("Includes your records, products, references, photos, timer time and reminder choices. Recently deleted photos are included. API keys and extra model files stay out.")
         lastBackup?.let { Text("Last saved on this phone: ${backupDate(it)}", style = MaterialTheme.typography.bodySmall) }
         Button(enabled = !state.busy, onClick = { creating = true }) { Text("Make a backup") }
         state.backup?.let { ready ->
@@ -86,7 +86,7 @@ internal fun BackupScreen(model: MainViewModel, backLabel: String = "Back to you
             text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Made ${backupDate(preview.summary.createdAtMillis)}")
                 BackupCounts(preview.summary)
-                Text("This replaces your current profile, routines, check-ins, measurements, products, references and photos. It won't change your AI key or extra model files.")
+                Text("This replaces your current records, photos, timer and reminder choices. Restored timers and reminders start paused. Your AI key and extra model files won't change.")
                 Text("If you need your current records too, save a backup of them first.")
                 if (state.busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Restoring your records and photos…") }
             } },
@@ -104,5 +104,7 @@ private fun backupDate(millis: Long): String {
 private fun BackupCounts(summary: BackupSummary) {
     Text("${summary.routines} routines · ${summary.checkIns} check-ins · ${summary.photos} photos")
     Text("${summary.products} products · ${summary.references} references")
+    Text("Reminder choices: ${summary.reminders}")
+    if (summary.timers > 0) Text("Saved timer: paused for review")
     if (summary.binnedPhotos > 0) Text("${summary.binnedPhotos} of those photos are in Recently deleted.", style = MaterialTheme.typography.bodySmall)
 }

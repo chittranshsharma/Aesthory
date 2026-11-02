@@ -8,6 +8,8 @@ An Android appearance coach for facial aesthetics, skin, hair and physique, supp
 - No-email setup and optional dated baseline measurements.
 - Persistent routines, daily habits, instructions, estimated duration, completion and undo.
 - Detailed habit editor: custom days/intervals, six tracking types, categories/tags, busy-day instructions, partial/skip logging, ordering and saved-instruction history.
+- Running timers: saved pause/resume state, app-restart recovery, original-instruction history and explicit review before logging. Phone reboot recovery pauses an estimated time for review.
+- Local reminders: action schedules, quiet hours, snooze, pause-all, grouped notifications and permission checks. Optional precise timer-goal alerts; routine reminders follow Android's approximate delivery.
 - Reusable products and notes/links with local text/Markdown import, dated observations, search, archive/recovery and versioned habit links. No extra account or AI needed.
 - On-device landmarks, recapture feedback and six apparent facial-proportion measurements. Reversible styling options follow your chosen goal.
 - Routine JSON files: preview, save and import independent copies without private history; repeated imports are detected.
@@ -19,7 +21,7 @@ An Android appearance coach for facial aesthetics, skin, hair and physique, supp
 
 The bundled face model is pretrained MediaPipe, not a newly trained PSL or facial-bone model. Selfie proportions are not hidden skeletal measurements or clinical findings. Optional language-model weights are not included, downloaded automatically or quality-validated yet. Analysis previews are temporary unless you choose “Keep as a progress photo”; journal photos persist independently of analysis.
 
-Health Connect/Google Health, nutrition OCR, Hevy, running timers/reminders, broader specialist retrieval and live Notion/Obsidian connections are subsequent milestones, not active integrations. References currently support text/Markdown and web links, not PDF/image attachments. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [habit/library guide](docs/HABITS.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
+Health Connect/Google Health, nutrition OCR, Hevy, weekly targets, broader specialist retrieval and live Notion/Obsidian connections are subsequent milestones, not active integrations. References currently support text/Markdown and web links, not PDF/image attachments. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [habit/library guide](docs/HABITS.md), [timers/reminders](docs/TIMING.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
 
 ## Build and run
 

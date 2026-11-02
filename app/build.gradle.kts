@@ -14,8 +14,8 @@ android {
         applicationId = "app.aesthory"
         minSdk = 28
         targetSdk = 37
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "0.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -40,6 +40,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.core)
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
     implementation(libs.coroutines.android)

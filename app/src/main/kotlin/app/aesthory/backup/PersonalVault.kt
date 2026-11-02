@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import app.aesthory.timing.AndroidTimingClock
 
 data class PreparedBackup(val token: String, val summary: BackupSummary, val bytes: Long)
 data class RestorePreview(val token: String, val summary: BackupSummary)
@@ -91,7 +92,8 @@ class PersonalVault(private val context: Context, private val db: AesthoryDataba
         val token = UUID.randomUUID().toString()
         val folder = File(work, token).also { check(it.mkdirs()) }
         try {
-            val snapshot = RecordSnapshot.capture(db, System.currentTimeMillis())
+            val moment = AndroidTimingClock(context).now()
+            val snapshot = RecordSnapshot.capture(db, moment.wall, moment)
             RecordSnapshot.validate(context, snapshot)
             val records = RecordSnapshot.encode(snapshot)
             val photos = daoPhotos(snapshot)

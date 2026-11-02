@@ -15,6 +15,7 @@ import app.aesthory.data.AesthoryRepository
 import app.aesthory.data.HabitDraft
 import app.aesthory.library.*
 import app.aesthory.routines.HabitSchedule
+import app.aesthory.timing.*
 import kotlinx.coroutines.flow.first
 import app.aesthory.profile.ProfileBaseline
 import app.aesthory.progress.*
@@ -50,6 +51,11 @@ class VaultDeviceTest {
             val category = repo.createCategory("Care")
             val routine = repo.createRoutine("Routine")
             val habit = repo.addHabit(routine, HabitDraft("Action", category, HabitSchedule(day), products = listOf(ProductChoice("product", "Use notes")), referenceIds = listOf("reference")))
+            val moment = AndroidTimingClock(context).now()
+            db.records().saveTimer(ActiveTimer(sessionId = UUID.randomUUID().toString(), habitId = habit, definitionVersion = 1, day = day.toEpochDay(),
+                accumulatedMillis = 4000, startedElapsedMillis = moment.elapsed, startedWallMillis = moment.wall, boot = moment.boot))
+            db.records().saveReminder(HabitReminder(habit, 8 * 60))
+            db.records().saveReminderPreferences(ReminderPreferences())
             val source = File(context.cacheDir, "source.jpg")
             val bitmap = Bitmap.createBitmap(512, 768, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.BLUE) }
             source.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it) }
@@ -75,6 +81,8 @@ class VaultDeviceTest {
             preferences.edit().putString("groq", "test-only credential placeholder").commit()
             val prepared = vault.prepareBackup("test-only नमस्ते password".toCharArray())
             assertEquals(2, prepared.summary.photos); assertEquals(1, prepared.summary.binnedPhotos)
+            assertEquals(1, prepared.summary.timers); assertEquals(1, prepared.summary.reminders)
+            assertTrue(db.records().getTimer()!!.running)
             vault.saveBackup(Uri.fromFile(backup), prepared.token)
             repo.saveProfile(ProfileBaseline(displayName = "Current"))
             repo.saveProduct(ProductEntity("product", "Changed product"))
@@ -83,6 +91,11 @@ class VaultDeviceTest {
             assertEquals("Current", db.records().getProfile()!!.displayName)
             vault.restoreBackup(preview.token)
             assertEquals("Original", db.records().getProfile()!!.displayName)
+            assertFalse(db.records().getTimer()!!.running)
+            assertEquals(TimerRecovery.BACKUP, db.records().getTimer()!!.recovery)
+            assertTrue(db.records().getTimer()!!.accumulatedMillis >= 4000)
+            assertTrue(db.records().getReminderPreferences()!!.paused)
+            assertEquals(8 * 60, db.records().allReminders().single().minuteOfDay)
             assertEquals("Original product", db.records().allProducts().single().name)
             assertEquals("Dated observation", db.records().allObservations().single().note)
             assertEquals("Private reference text", repo.links(habit, 1).first().references.single().content)

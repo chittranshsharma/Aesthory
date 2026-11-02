@@ -63,7 +63,7 @@ class LibraryMigrationTest {
             }
             old.version = 2
         }
-        val upgraded = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_2_3).build()
+        val upgraded = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_2_3, AesthoryDatabase.MIGRATION_3_4).build()
         try {
             val dao = upgraded.records()
             assertEquals("V2 profile", dao.getProfile()!!.displayName)

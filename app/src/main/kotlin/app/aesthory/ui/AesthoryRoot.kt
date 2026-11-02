@@ -48,25 +48,29 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AesthoryRoot(model: MainViewModel) {
+    RefreshCalendarDate(model)
     val state by model.ui.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var photoReview by rememberSaveable { mutableStateOf(false) }
     var recovery by rememberSaveable { mutableStateOf(false) }
+    var timerOpen by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state.openTimerRequest) { if (state.openTimerRequest > 0) { tab = 0; recovery = false; timerOpen = true } }
+    LaunchedEffect(state.openTodayRequest) { if (state.openTodayRequest > 0) { tab = 0; recovery = false; timerOpen = false } }
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(state.message) {
         state.message?.let {
             val undo = state.undoPhotoId != null && it == "Photo moved to Recently deleted."
-            val result = snackbar.showSnackbar(it, actionLabel = if (undo) "Undo" else "Dismiss")
+            val result = snackbar.showSnackbar(it, actionLabel = if (undo) "Undo" else "Dismiss", duration = if (undo) SnackbarDuration.Long else SnackbarDuration.Short)
             if (undo && result == SnackbarResult.ActionPerformed) model.undoPhoto() else model.clearMessage()
         }
     }
     AesthoryTheme {
-        BackHandler(tab != 0 || recovery) { if (recovery) recovery = false else if (tab == 1 && photoReview) photoReview = false else tab = 0 }
+        BackHandler(tab != 0 || recovery || timerOpen) { if (timerOpen) timerOpen = false else if (recovery) recovery = false else if (tab == 1 && photoReview) photoReview = false else tab = 0 }
         Scaffold(
             snackbarHost = { SnackbarHost(snackbar) },
-            topBar = { TopAppBar(title = { Text(if (state.profile == null) "Aesthory" else listOf("Today", "Coach", "Routines", "You")[tab]) }) },
+            topBar = { TopAppBar(title = { Text(if (timerOpen) "Timer" else if (state.profile == null) "Aesthory" else listOf("Today", "Coach", "Routines", "You")[tab]) }) },
             bottomBar = {
-                if (state.profile != null && state.openEditors == 0) NavigationBar {
+                if (state.profile != null && state.openEditors == 0 && !timerOpen) NavigationBar {
                     val titles = listOf("Today", "Coach", "Routines", "You")
                     val icons = listOf(R.drawable.ic_home, R.drawable.ic_face, R.drawable.ic_routines, R.drawable.ic_profile)
                     titles.forEachIndexed { index, title ->
@@ -84,8 +88,10 @@ fun AesthoryRoot(model: MainViewModel) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                     TextButton(enabled = state.canCancel, onClick = model::cancelWork, modifier = Modifier.align(Alignment.End)) { Text(if (state.canCancel) "Cancel action" else "Finishing safely…") }
                 }
+                if (!timerOpen && state.openEditors == 0 && state.profile != null) TimerBar(model) { timerOpen = true; tab = 0 }
                 when {
                     !state.loaded -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    timerOpen && state.profile != null -> TimerScreen(model) { timerOpen = false; tab = 0 }
                     recovery -> BackupScreen(model, if (state.profile == null) "Back to setup" else "Back to Today") { recovery = false; tab = 0 }
                     state.profile == null -> BaselineForm(null, model, state.busy, onRestore = { recovery = true })
                     tab == 0 -> TodayScreen(model, onRoutines = { tab = 2 }, onAnalyze = { tab = 1; photoReview = true })
@@ -313,6 +319,8 @@ private fun RoutineHabits(routine: RoutineEntity, model: MainViewModel, onEdit: 
                 if (habit.definition.shortInstructions.isNotBlank()) Text("Busy-day version: " + habit.definition.shortInstructions)
                 Text("Tracking: " + trackingLabel(habit.definition.tracking.kind))
                 LinkedHabitDetails(model, habit.definition.habitId, habit.definition.version)
+                StartTimerButton(model, habit.definition.habitId, enabled = habit.state == app.aesthory.routines.HabitState.ACTIVE)
+                ActionReminderButton(model, habit.definition.habitId)
                 TextButton(enabled = !state.busy, onClick = { onEdit(habit) }) { Text("Edit action") }
                 TextButton(onClick = { onHistory(habit.definition.habitId) }) { Text("Past check-ins") }
                 Row {
@@ -456,6 +464,7 @@ private fun ProfileScreen(model: MainViewModel) {
         when (section) {
             "photos" -> ProgressScreen(model) { section = null }
             "library" -> LibraryScreen(model) { section = null }
+            "reminders" -> RemindersScreen(model) { section = null }
             else -> BackupScreen(model) { section = null }
         }
         return
@@ -480,6 +489,7 @@ private fun ProfileScreen(model: MainViewModel) {
         Button(onClick = { editing = true }) { Text("About you & your goals") }
         FilledTonalButton(onClick = { section = "photos" }) { Text("My progress photos") }
         FilledTonalButton(onClick = { section = "library" }) { Text("Products & references") }
+        OutlinedButton(onClick = { section = "reminders"; model.refreshTiming() }) { Text("Reminders & timers") }
         OutlinedButton(onClick = { section = "backup" }) { Text("Backup & restore") }
         measurements.firstOrNull()?.let { latest ->
             SectionHeading("Your measurements")

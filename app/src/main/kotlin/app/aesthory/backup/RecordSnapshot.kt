@@ -8,6 +8,7 @@ import androidx.room.Room
 import androidx.room.withTransaction
 import app.aesthory.data.AesthoryDatabase
 import app.aesthory.routines.CompletionInput
+import app.aesthory.timing.*
 import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
 import java.time.LocalDate
@@ -15,15 +16,16 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
 
-data class BackupSummary(val createdAtMillis: Long, val routines: Int, val checkIns: Int, val photos: Int, val binnedPhotos: Int, val products: Int = 0, val references: Int = 0)
+data class BackupSummary(val createdAtMillis: Long, val routines: Int, val checkIns: Int, val photos: Int, val binnedPhotos: Int, val products: Int = 0, val references: Int = 0, val reminders: Int = 0, val timers: Int = 0)
 
 /** Exact allowlist: credentials, preferences and optional model files cannot enter this format. */
 object RecordSnapshot {
     const val MAX_BYTES = 16 * 1024 * 1024
     private val v2Tables = listOf("profiles", "measurements", "categories", "routines", "habits", "habit_versions", "completion_events", "progress_photos")
-    val tables = listOf("profiles", "measurements", "categories", "routines", "products", "personal_references", "product_observations",
+    private val v3Tables = listOf("profiles", "measurements", "categories", "routines", "products", "personal_references", "product_observations",
         "habits", "habit_versions", "habit_product_links", "habit_reference_links", "completion_events", "progress_photos")
-    suspend fun capture(db: AesthoryDatabase, at: Long): JSONObject = db.withTransaction {
+    val tables = v3Tables + listOf("active_timer", "habit_reminders", "reminder_preferences")
+    suspend fun capture(db: AesthoryDatabase, at: Long, moment: TimingMoment? = null): JSONObject = db.withTransaction {
         val data = JSONObject()
         tables.forEach { table ->
             val rows = JSONArray()
@@ -45,7 +47,13 @@ object RecordSnapshot {
             }
             data.put(table, rows)
         }
-        JSONObject().put("format", 1).put("schema", 3).put("createdAtMillis", at).put("tables", data)
+        db.records().getTimer()?.let { timer ->
+            val portable = TimerMath.portable(timer, moment ?: run { require(!timer.running); TimingMoment(at, 0, -1, java.time.ZoneOffset.UTC) })
+            data.getJSONArray("active_timer").getJSONObject(0).put("accumulatedMillis", portable.accumulatedMillis)
+                .put("startedElapsedMillis", JSONObject.NULL).put("startedWallMillis", JSONObject.NULL).put("recovery", TimerRecovery.BACKUP.name)
+        }
+        data.getJSONArray("reminder_preferences").let { rows -> repeat(rows.length()) { rows.getJSONObject(it).put("paused", 1) } }
+        JSONObject().put("format", 1).put("schema", 4).put("createdAtMillis", at).put("tables", data)
     }
     fun encode(snapshot: JSONObject): ByteArray = snapshot.toString().toByteArray(Charsets.UTF_8).also { require(it.size <= MAX_BYTES) }
     fun decode(bytes: ByteArray): JSONObject {
@@ -55,7 +63,7 @@ object RecordSnapshot {
         val parser = JSONTokener(text)
         val root = parser.nextValue() as? JSONObject ?: error("Invalid backup records")
         require(parser.nextClean().code == 0 && root.keys().asSequence().toSet() == setOf("format", "schema", "createdAtMillis", "tables"))
-        if (root.get("format").toString() != "1" || root.get("schema").toString() !in setOf("2", "3")) throw VaultUserError("This backup version isn't supported here. Keep the file and update Aesthory before trying again.")
+        if (root.get("format").toString() != "1" || root.get("schema").toString() !in setOf("2", "3", "4")) throw VaultUserError("This backup version isn't supported here. Keep the file and update Aesthory before trying again.")
         require(root.get("createdAtMillis").toString().toLong() >= 0)
         if (root.get("schema").toString() == "2") {
             val data = root.getJSONObject("tables")
@@ -66,9 +74,23 @@ object RecordSnapshot {
                 require(!row.has("purpose") && !row.has("tags") && !row.has("shortInstructions"))
                 row.put("purpose", "").put("tags", "[]").put("shortInstructions", "")
             }
-            (tables - v2Tables.toSet()).forEach { data.put(it, JSONArray()) }
+            (v3Tables - v2Tables.toSet()).forEach { data.put(it, JSONArray()) }
             root.put("schema", 3)
         }
+        if (root.get("schema").toString() == "3") {
+            val data = root.getJSONObject("tables")
+            require(data.keys().asSequence().toSet() == v3Tables.toSet())
+            val events = data.getJSONArray("completion_events")
+            repeat(events.length()) { index -> val row = events.getJSONObject(index); require(!row.has("timedSeconds")); row.put("timedSeconds", JSONObject.NULL) }
+            (tables - v3Tables.toSet()).forEach { data.put(it, JSONArray()) }
+            root.put("schema", 4)
+        }
+        // A restored clock never runs by itself, and imported reminder schedules start paused.
+        root.getJSONObject("tables").getJSONArray("reminder_preferences").let { rows -> repeat(rows.length()) {
+            val row = rows.getJSONObject(it)
+            require(row.get("paused") is Number && row.get("paused").toString().toLongOrNull() in setOf(0L, 1L))
+            row.put("paused", 1)
+        } }
         require(root.getJSONObject("tables").keys().asSequence().toSet() == tables.toSet())
         return root
     }
@@ -77,7 +99,7 @@ object RecordSnapshot {
         val photos = data.getJSONArray("progress_photos")
         val binned = (0 until photos.length()).count { !photos.getJSONObject(it).isNull("deletedAtMillis") }
         return BackupSummary(snapshot.getLong("createdAtMillis"), data.getJSONArray("routines").length(), data.getJSONArray("completion_events").length(), photos.length(), binned,
-            data.getJSONArray("products").length(), data.getJSONArray("personal_references").length())
+            data.getJSONArray("products").length(), data.getJSONArray("personal_references").length(), data.getJSONArray("habit_reminders").length(), data.getJSONArray("active_timer").length())
     }
     suspend fun validate(context: Context, snapshot: JSONObject) {
         val staging = Room.inMemoryDatabaseBuilder(context, AesthoryDatabase::class.java).build()
@@ -101,7 +123,15 @@ object RecordSnapshot {
                 require(event.id > 0 && event.recordedAtMillis >= 0)
                 LocalDate.ofEpochDay(event.dateDay)
                 CompletionInput(event.status, event.value, event.checkedItems).validateFor(requireNotNull(byVersion[event.habitId to event.definitionVersion]).tracking)
+                event.timedSeconds?.let { seconds ->
+                    require(seconds in 0..MAX_TIMER_MILLIS / 1000 && event.status in setOf(app.aesthory.routines.CompletionStatus.DONE, app.aesthory.routines.CompletionStatus.PARTIAL))
+                    if (byVersion[event.habitId to event.definitionVersion]!!.tracking.kind == app.aesthory.routines.TrackingKind.DURATION) require(event.value == seconds.toDouble())
+                }
             }
+            require(dao.allTimers().size <= 1 && dao.allTimers().all { !it.running && it.recovery == TimerRecovery.BACKUP })
+            require(dao.allReminders().count { it.enabled } <= 100)
+            require(dao.allReminderPreferences().size <= 1 && dao.allReminderPreferences().all { it.paused })
+            if (dao.allReminders().isNotEmpty()) require(dao.allReminderPreferences().size == 1)
             require(dao.allPhotos().size <= 500)
             staging.openHelper.writableDatabase.query("PRAGMA foreign_key_check").use { require(!it.moveToFirst()) }
         } finally { staging.close() }
@@ -109,6 +139,7 @@ object RecordSnapshot {
     suspend fun replace(db: AesthoryDatabase, snapshot: JSONObject) = db.withTransaction {
         val sql = db.openHelper.writableDatabase
         val data = snapshot.getJSONObject("tables")
+        sql.execSQL("DELETE FROM reminder_runtime")
         tables.asReversed().forEach { sql.execSQL("DELETE FROM `$it`") }
         var total = 0
         tables.forEach { table ->
@@ -128,7 +159,9 @@ object RecordSnapshot {
                         type == "INTEGER" -> {
                             require(value is Number)
                             val number = value.toString().toLong()
-                            if (column == "archived") require(number in 0..1)
+                            if (column in setOf("archived", "enabled", "paused", "quietEnabled", "goalAlerted")) require(number in 0..1)
+                            if (column in setOf("minuteOfDay", "quietStart", "quietEnd")) require(number in 0..1439)
+                            if (column == "boot") require(number in -1..Int.MAX_VALUE)
                             values.put(column, number)
                         }
                         type == "REAL" -> { require(value is Number && value.toDouble().isFinite()); values.put(column, value.toDouble()) }
