@@ -61,10 +61,17 @@ class TimingMigrationTest {
             }
             old.version = 3
         }
-        val upgraded = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_3_4).build()
+        val upgraded = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_3_4, AesthoryDatabase.MIGRATION_4_5).build()
         try {
             val dao = upgraded.records()
             assertEquals("V3 profile", dao.getProfile()!!.displayName)
+            val target = app.aesthory.progress.WeeklyTarget(java.time.LocalDate.of(2026,11,2).toEpochDay(), 5, 90)
+            dao.saveWeeklyTarget(target)
+            assertEquals(target, dao.allWeeklyTargets().single())
+            val roundtrip = RecordSnapshot.decode(RecordSnapshot.encode(RecordSnapshot.capture(upgraded, 123)))
+            RecordSnapshot.validate(context, roundtrip)
+            RecordSnapshot.replace(upgraded, roundtrip)
+            assertEquals(target, dao.allWeeklyTargets().single())
             assertEquals("Old reason", dao.allVersions().single().purpose)
             assertNull(dao.allEvents().single().timedSeconds)
             assertEquals("Old product", dao.allProducts().single().name)

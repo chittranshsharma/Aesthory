@@ -47,6 +47,9 @@ data class HistoryEntry(val event: CompletionEventEntity, val definition: HabitV
 
 class AesthoryRepository(private val db: AesthoryDatabase, private val clock: Clock = Clock.systemUTC()) {
     private val dao = db.records()
+    fun weeklyTarget(day: Long) = dao.observeWeeklyTarget(day)
+    fun weeklyLogs(day: Long) = dao.observeWeeklyLogs(day, day + 6)
+    suspend fun saveWeeklyTarget(target: app.aesthory.progress.WeeklyTarget) = dao.saveWeeklyTarget(target)
     val profile = dao.observeProfile()
     val measurements = dao.observeMeasurements()
     val routines = dao.observeRoutines()

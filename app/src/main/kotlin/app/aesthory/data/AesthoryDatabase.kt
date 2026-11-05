@@ -33,6 +33,12 @@ class DatabaseConverters {
 
 @Dao
 interface AesthoryDao {
+    @Query("SELECT * FROM weekly_targets WHERE startDay = :day") fun observeWeeklyTarget(day: Long): Flow<app.aesthory.progress.WeeklyTarget?>
+    @Query("SELECT * FROM weekly_targets") suspend fun allWeeklyTargets(): List<app.aesthory.progress.WeeklyTarget>
+    @Upsert suspend fun saveWeeklyTarget(target: app.aesthory.progress.WeeklyTarget)
+    @Query("SELECT e.id, e.habitId, e.dateDay, e.status, e.value, e.timedSeconds, v.tracking_kind AS kind FROM completion_events e JOIN habit_versions v ON e.habitId = v.habitId AND e.definitionVersion = v.version WHERE e.dateDay BETWEEN :start AND :end")
+    fun observeWeeklyLogs(start: Long, end: Long): Flow<List<app.aesthory.progress.WeeklyLog>>
+
     @Query("SELECT * FROM active_timer WHERE id = 1") fun observeTimer(): Flow<ActiveTimer?>
     @Query("SELECT * FROM active_timer WHERE id = 1") suspend fun getTimer(): ActiveTimer?
     @Query("SELECT * FROM active_timer") suspend fun allTimers(): List<ActiveTimer>
@@ -118,14 +124,19 @@ interface AesthoryDao {
     entities = [ProfileEntity::class, MeasurementEntity::class, CategoryEntity::class,
         RoutineEntity::class, HabitEntity::class, HabitVersionEntity::class, CompletionEventEntity::class, ProgressPhoto::class,
         ProductEntity::class, ReferenceEntity::class, ProductObservation::class, HabitProductLink::class, HabitReferenceLink::class,
-        ActiveTimer::class, HabitReminder::class, ReminderPreferences::class, ReminderRuntime::class],
-    version = 4, exportSchema = true,
+        app.aesthory.progress.WeeklyTarget::class, ActiveTimer::class, HabitReminder::class, ReminderPreferences::class, ReminderRuntime::class],
+    version = 5, exportSchema = true,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class AesthoryDatabase : RoomDatabase() {
     abstract fun records(): AesthoryDao
 
     companion object {
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE weekly_targets (startDay INTEGER NOT NULL PRIMARY KEY, completed INTEGER, minutes INTEGER)")
+            }
+        }
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE completion_events ADD COLUMN timedSeconds INTEGER DEFAULT NULL")
@@ -160,6 +171,6 @@ abstract class AesthoryDatabase : RoomDatabase() {
         }
         fun open(context: Context) = Room.databaseBuilder(
             context.applicationContext, AesthoryDatabase::class.java, "aesthory.db",
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
     }
 }

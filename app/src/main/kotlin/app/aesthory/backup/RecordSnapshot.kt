@@ -24,7 +24,8 @@ object RecordSnapshot {
     private val v2Tables = listOf("profiles", "measurements", "categories", "routines", "habits", "habit_versions", "completion_events", "progress_photos")
     private val v3Tables = listOf("profiles", "measurements", "categories", "routines", "products", "personal_references", "product_observations",
         "habits", "habit_versions", "habit_product_links", "habit_reference_links", "completion_events", "progress_photos")
-    val tables = v3Tables + listOf("active_timer", "habit_reminders", "reminder_preferences")
+    private val v4Tables = v3Tables + listOf("active_timer", "habit_reminders", "reminder_preferences")
+    val tables = v4Tables + "weekly_targets"
     suspend fun capture(db: AesthoryDatabase, at: Long, moment: TimingMoment? = null): JSONObject = db.withTransaction {
         val data = JSONObject()
         tables.forEach { table ->
@@ -53,7 +54,7 @@ object RecordSnapshot {
                 .put("startedElapsedMillis", JSONObject.NULL).put("startedWallMillis", JSONObject.NULL).put("recovery", TimerRecovery.BACKUP.name)
         }
         data.getJSONArray("reminder_preferences").let { rows -> repeat(rows.length()) { rows.getJSONObject(it).put("paused", 1) } }
-        JSONObject().put("format", 1).put("schema", 4).put("createdAtMillis", at).put("tables", data)
+        JSONObject().put("format", 1).put("schema", 5).put("createdAtMillis", at).put("tables", data)
     }
     fun encode(snapshot: JSONObject): ByteArray = snapshot.toString().toByteArray(Charsets.UTF_8).also { require(it.size <= MAX_BYTES) }
     fun decode(bytes: ByteArray): JSONObject {
@@ -63,7 +64,7 @@ object RecordSnapshot {
         val parser = JSONTokener(text)
         val root = parser.nextValue() as? JSONObject ?: error("Invalid backup records")
         require(parser.nextClean().code == 0 && root.keys().asSequence().toSet() == setOf("format", "schema", "createdAtMillis", "tables"))
-        if (root.get("format").toString() != "1" || root.get("schema").toString() !in setOf("2", "3", "4")) throw VaultUserError("This backup version isn't supported here. Keep the file and update Aesthory before trying again.")
+        if (root.get("format").toString() != "1" || root.get("schema").toString() !in setOf("2", "3", "4", "5")) throw VaultUserError("This backup version isn't supported here. Keep the file and update Aesthory before trying again.")
         require(root.get("createdAtMillis").toString().toLong() >= 0)
         if (root.get("schema").toString() == "2") {
             val data = root.getJSONObject("tables")
@@ -82,8 +83,14 @@ object RecordSnapshot {
             require(data.keys().asSequence().toSet() == v3Tables.toSet())
             val events = data.getJSONArray("completion_events")
             repeat(events.length()) { index -> val row = events.getJSONObject(index); require(!row.has("timedSeconds")); row.put("timedSeconds", JSONObject.NULL) }
-            (tables - v3Tables.toSet()).forEach { data.put(it, JSONArray()) }
+            (v4Tables - v3Tables.toSet()).forEach { data.put(it, JSONArray()) }
             root.put("schema", 4)
+        }
+        if (root.get("schema").toString() == "4") {
+            val data = root.getJSONObject("tables")
+            require(data.keys().asSequence().toSet() == v4Tables.toSet())
+            data.put("weekly_targets", JSONArray())
+            root.put("schema", 5)
         }
         // A restored clock never runs by itself, and imported reminder schedules start paused.
         root.getJSONObject("tables").getJSONArray("reminder_preferences").let { rows -> repeat(rows.length()) {
@@ -106,6 +113,7 @@ object RecordSnapshot {
         try {
             replace(staging, snapshot)
             val dao = staging.records()
+            dao.allWeeklyTargets() // Validate target ranges and Monday boundaries.
             val profiles = dao.allProfiles()
             require(profiles.size <= 1 && profiles.all { it.id == 1L })
             dao.allMeasurements().forEach { require(it.id > 0 && it.recordedAtMillis >= 0) } // Also forces validated measurement constructors.
@@ -162,6 +170,8 @@ object RecordSnapshot {
                             if (column in setOf("archived", "enabled", "paused", "quietEnabled", "goalAlerted")) require(number in 0..1)
                             if (column in setOf("minuteOfDay", "quietStart", "quietEnd")) require(number in 0..1439)
                             if (column == "boot") require(number in -1..Int.MAX_VALUE)
+                            if (table == "weekly_targets" && column == "completed") require(number in 1..10000)
+                            if (table == "weekly_targets" && column == "minutes") require(number in 1..10080)
                             values.put(column, number)
                         }
                         type == "REAL" -> { require(value is Number && value.toDouble().isFinite()); values.put(column, value.toDouble()) }

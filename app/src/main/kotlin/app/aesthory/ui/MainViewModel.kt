@@ -95,6 +95,9 @@ class MainViewModel(
     val reminderPreferences = timing.preferences.map { it ?: ReminderPreferences() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReminderPreferences())
     val reminderActions = repository.reminderActions.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     fun timingNow() = timing.clock.now()
+    fun weeklyTarget(day: Long) = repository.weeklyTarget(day)
+    fun weeklyLogs(day: Long) = repository.weeklyLogs(day)
+    fun saveWeeklyTarget(target: WeeklyTarget, saved: () -> Unit) = action { repository.saveWeeklyTarget(target); saved() }
     suspend fun timerDefinition(timer: ActiveTimer) = repository.definition(timer.habitId, timer.definitionVersion)
     fun refreshTiming() { viewModelScope.launch {
         try { timing.refresh(); state.update { it.copy(timingStatus = timing.status()) } }
