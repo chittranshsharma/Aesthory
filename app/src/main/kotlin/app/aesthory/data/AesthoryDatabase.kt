@@ -33,6 +33,14 @@ class DatabaseConverters {
 
 @Dao
 interface AesthoryDao {
+    @Query("SELECT * FROM nutrition_days ORDER BY day DESC LIMIT 366") fun observeNutrition(): Flow<List<app.aesthory.nutrition.NutritionDay>>
+    @Query("SELECT * FROM nutrition_days WHERE day = :day") suspend fun nutritionOn(day: Long): app.aesthory.nutrition.NutritionDay?
+    @Query("SELECT * FROM nutrition_days") suspend fun allNutrition(): List<app.aesthory.nutrition.NutritionDay>
+    @Query("SELECT * FROM nutrition_imports") suspend fun allNutritionImports(): List<app.aesthory.nutrition.NutritionImport>
+    @Query("SELECT * FROM nutrition_imports WHERE hash = :hash") suspend fun nutritionImport(hash: String): app.aesthory.nutrition.NutritionImport?
+    @Upsert suspend fun saveNutrition(day: app.aesthory.nutrition.NutritionDay)
+    @Insert suspend fun insertNutritionImport(receipt: app.aesthory.nutrition.NutritionImport)
+
     @Query("SELECT * FROM weekly_targets WHERE startDay = :day") fun observeWeeklyTarget(day: Long): Flow<app.aesthory.progress.WeeklyTarget?>
     @Query("SELECT * FROM weekly_targets") suspend fun allWeeklyTargets(): List<app.aesthory.progress.WeeklyTarget>
     @Upsert suspend fun saveWeeklyTarget(target: app.aesthory.progress.WeeklyTarget)
@@ -121,17 +129,23 @@ interface AesthoryDao {
 }
 
 @Database(
-    entities = [ProfileEntity::class, MeasurementEntity::class, CategoryEntity::class,
+    entities = [app.aesthory.nutrition.NutritionDay::class, app.aesthory.nutrition.NutritionImport::class, ProfileEntity::class, MeasurementEntity::class, CategoryEntity::class,
         RoutineEntity::class, HabitEntity::class, HabitVersionEntity::class, CompletionEventEntity::class, ProgressPhoto::class,
         ProductEntity::class, ReferenceEntity::class, ProductObservation::class, HabitProductLink::class, HabitReferenceLink::class,
         app.aesthory.progress.WeeklyTarget::class, ActiveTimer::class, HabitReminder::class, ReminderPreferences::class, ReminderRuntime::class],
-    version = 5, exportSchema = true,
+    version = 6, exportSchema = true,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class AesthoryDatabase : RoomDatabase() {
     abstract fun records(): AesthoryDao
 
     companion object {
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE nutrition_days (day INTEGER NOT NULL PRIMARY KEY, calories REAL, protein REAL, carbs REAL, fat REAL, sourceHash TEXT, revision TEXT NOT NULL, savedAtMillis INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE nutrition_imports (hash TEXT NOT NULL PRIMARY KEY, day INTEGER NOT NULL)")
+            }
+        }
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE weekly_targets (startDay INTEGER NOT NULL PRIMARY KEY, completed INTEGER, minutes INTEGER)")
@@ -171,6 +185,6 @@ abstract class AesthoryDatabase : RoomDatabase() {
         }
         fun open(context: Context) = Room.databaseBuilder(
             context.applicationContext, AesthoryDatabase::class.java, "aesthory.db",
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
     }
 }

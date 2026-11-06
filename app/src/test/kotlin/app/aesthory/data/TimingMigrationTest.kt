@@ -61,7 +61,7 @@ class TimingMigrationTest {
             }
             old.version = 3
         }
-        val upgraded = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_3_4, AesthoryDatabase.MIGRATION_4_5).build()
+        val upgraded = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_3_4, AesthoryDatabase.MIGRATION_4_5, AesthoryDatabase.MIGRATION_5_6).build()
         try {
             val dao = upgraded.records()
             assertEquals("V3 profile", dao.getProfile()!!.displayName)

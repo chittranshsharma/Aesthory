@@ -5,6 +5,7 @@ An Android appearance coach for facial aesthetics, skin, hair and physique, supp
 ## Usable development build
 
 - Built-in coaching from first launch: five starter routines, next-action suggestions and 11 searchable care/style/looksmaxing guides. No model download or API key needed.
+- Nutrition screenshot import: bundled on-device OCR, editable date/calories/macros, explicit daily replacement and duplicate-image protection. Manual entry works offline.
 - No-email setup and optional dated baseline measurements.
 - Persistent routines, daily habits, instructions, estimated duration, completion and undo.
 - Detailed habit editor: custom days/intervals, six tracking types, categories/tags, busy-day instructions, partial/skip logging, ordering and saved-instruction history.
@@ -22,7 +23,7 @@ An Android appearance coach for facial aesthetics, skin, hair and physique, supp
 
 The bundled face model is pretrained MediaPipe, not a newly trained PSL or facial-bone model. Selfie proportions are not hidden skeletal measurements or clinical findings. Optional language-model weights are not included, downloaded automatically or quality-validated yet. Analysis previews are temporary unless you choose “Keep as a progress photo”; journal photos persist independently of analysis.
 
-Health Connect/Google Health, nutrition OCR, Hevy, broader specialist retrieval and live Notion/Obsidian connections are subsequent milestones, not active integrations. References currently support text/Markdown and web links, not PDF/image attachments. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [habit/library guide](docs/HABITS.md), [timers/reminders](docs/TIMING.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
+Health Connect/Google Health, Hevy, broader specialist retrieval and live Notion/Obsidian connections are subsequent milestones, not active integrations. References currently support text/Markdown and web links, not PDF/image attachments. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [habit/library guide](docs/HABITS.md), [timers/reminders](docs/TIMING.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
 
 ## Build and run
 
@@ -38,7 +39,7 @@ Set `JAVA_HOME`. Create ignored `local.properties` with your SDK path, e.g. `sdk
 
 On macOS/Linux use `sh ./gradlew` with the same tasks. First build downloads pinned Gradle/Maven dependencies. Install `app/build/outputs/apk/debug/app-debug.apk` or run from Android Studio. GitHub Actions also produces a debug APK artifact after successful checks.
 
-No key/account/paid service or personal data is needed for setup, routines or landmarks. INTERNET is used only by the explicit optional Groq test at this checkpoint. Photos are processed locally. Automatic backup is disabled. Use You → Backup & restore before uninstalling or moving phones: saved backups include records, journal photos and Recently deleted, exclude API keys/extra model files, and require their exact password. Forgotten passwords cannot be recovered. See [backup format and recovery](docs/BACKUPS.md). Universal debug APK includes native libraries for multiple ABIs; it is not a release-size benchmark.
+No key/account/paid service or personal data is needed for setup, routines or landmarks. Nutrition screenshots and photos are processed locally; Groq connection testing remains optional. Automatic backup is disabled. Use You → Backup & restore before uninstalling or moving phones: saved backups include records, journal photos and Recently deleted, exclude API keys/extra model files, and require their exact password. Forgotten passwords cannot be recovered. See [backup format and recovery](docs/BACKUPS.md). Universal debug APK includes native libraries for multiple ABIs; it is not a release-size benchmark.
 
 ## Working with an agent
 

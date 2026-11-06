@@ -104,6 +104,7 @@ private fun backupDate(millis: Long): String {
 private fun BackupCounts(summary: BackupSummary) {
     Text("${summary.routines} routines · ${summary.checkIns} check-ins · ${summary.photos} photos")
     Text("${summary.products} products · ${summary.references} references")
+    Text("Nutrition days: ${summary.nutritionDays}")
     Text("Reminder choices: ${summary.reminders}")
     if (summary.timers > 0) Text("Saved timer: paused for review")
     if (summary.binnedPhotos > 0) Text("${summary.binnedPhotos} of those photos are in Recently deleted.", style = MaterialTheme.typography.bodySmall)

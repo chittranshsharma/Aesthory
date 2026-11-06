@@ -47,6 +47,18 @@ data class HistoryEntry(val event: CompletionEventEntity, val definition: HabitV
 
 class AesthoryRepository(private val db: AesthoryDatabase, private val clock: Clock = Clock.systemUTC()) {
     private val dao = db.records()
+    val nutrition = dao.observeNutrition()
+    suspend fun nutritionOn(day: Long) = dao.nutritionOn(day)
+    suspend fun nutritionImport(hash: String) = dao.nutritionImport(hash)
+    suspend fun saveNutrition(candidate: app.aesthory.nutrition.NutritionDay, expectedRevision: String?): app.aesthory.nutrition.NutritionSave = db.withTransaction {
+        candidate.sourceHash?.let { hash -> dao.nutritionImport(hash)?.let { return@withTransaction app.aesthory.nutrition.NutritionSave.Duplicate(it.day) } }
+        val existing = dao.nutritionOn(candidate.day)
+        if (existing != null && existing.revision != expectedRevision) return@withTransaction app.aesthory.nutrition.NutritionSave.Replace(existing)
+        // One snapshot replaces the whole day; missing nutrients stay unknown, never added to old totals.
+        dao.saveNutrition(candidate)
+        candidate.sourceHash?.let { dao.insertNutritionImport(app.aesthory.nutrition.NutritionImport(it, candidate.day)) }
+        app.aesthory.nutrition.NutritionSave.Saved
+    }
     fun weeklyTarget(day: Long) = dao.observeWeeklyTarget(day)
     fun weeklyLogs(day: Long) = dao.observeWeeklyLogs(day, day + 6)
     suspend fun saveWeeklyTarget(target: app.aesthory.progress.WeeklyTarget) = dao.saveWeeklyTarget(target)

@@ -1,6 +1,7 @@
 package app.aesthory.ui
 
 import android.net.Uri
+import app.aesthory.nutrition.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aesthory.coaching.GroqConnection
@@ -43,7 +44,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+data class NutritionDraft(val scan: NutritionScan?, val existing: NutritionDay? = null, val token: String = java.util.UUID.randomUUID().toString())
+
 data class AppState(
+    val nutritionDraft: NutritionDraft? = null,
+    val nutritionConflict: NutritionDay? = null,
     val timingStatus: TimingStatus = TimingStatus(false, false, false, false),
     val openTimerRequest: Int = 0,
     val openTodayRequest: Int = 0,
@@ -83,8 +88,30 @@ class MainViewModel(
     private val vault: PersonalVault,
     private val referenceFiles: ReferenceFiles,
     private val timing: TimingController,
+    private val nutritionOcr: NutritionOcr,
 ) : ViewModel() {
     private val state = MutableStateFlow(AppState())
+    val nutrition = repository.nutrition.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    fun importNutrition(uri: Uri) = action("We couldn't read that image. Choose a PNG, JPEG or WebP screenshot under 20 MB, or enter your totals manually.") {
+        val scan = nutritionOcr.scan(uri)
+        val duplicate = repository.nutritionImport(scan.hash)
+        if (duplicate != null) notifyUser("This screenshot was already saved for ${LocalDate.ofEpochDay(duplicate.day)}. Open that day's entry to edit it.")
+        else state.update { it.copy(nutritionDraft = NutritionDraft(scan), nutritionConflict = null) }
+    }
+    fun manualNutrition(existing: NutritionDay? = null) { if (!state.value.busy) state.update { it.copy(nutritionDraft = NutritionDraft(null, existing), nutritionConflict = null) } }
+    fun discardNutrition() { if (!state.value.busy) state.update { it.copy(nutritionDraft = null, nutritionConflict = null) } }
+    fun clearNutritionConflict() { state.update { it.copy(nutritionConflict = null) } }
+    fun saveNutrition(day: LocalDate, values: NutritionValues, confirmedRevision: String? = null) = action {
+        val draft = requireNotNull(state.value.nutritionDraft)
+        val now = timing.clock.now()
+        require(day <= java.time.Instant.ofEpochMilli(now.wall).atZone(now.zone).toLocalDate())
+        val candidate = NutritionDay(day.toEpochDay(), values.calories, values.protein, values.carbs, values.fat, draft.scan?.hash, savedAtMillis = now.wall)
+        when (val result = repository.saveNutrition(candidate, confirmedRevision)) {
+            NutritionSave.Saved -> state.update { it.copy(nutritionDraft = null, nutritionConflict = null, message = "Daily nutrition saved.") }
+            is NutritionSave.Replace -> state.update { it.copy(nutritionConflict = result.existing) }
+            is NutritionSave.Duplicate -> state.update { it.copy(nutritionConflict = null, message = "This screenshot was already saved for ${LocalDate.ofEpochDay(result.day)}. Nothing was added.") }
+        }
+    }
     val ui = state.asStateFlow()
     val routines = repository.routines.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val measurements = repository.measurements.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -265,7 +292,7 @@ class MainViewModel(
         try {
             timing.prepareForRestore()
             try { vault.restoreBackup(requireNotNull(state.value.restorePreview).token) } finally { timing.refresh() }
-            state.update { it.copy(restorePreview = null, restoreComplete = true, photo = null, offlineText = null, editingPhoto = null, photoSource = null, saveAnalyzedPhoto = false, message = "Your backup is restored.") }
+            state.update { it.copy(restorePreview = null, restoreComplete = true, nutritionDraft = null, nutritionConflict = null, photo = null, offlineText = null, editingPhoto = null, photoSource = null, saveAnalyzedPhoto = false, message = "Your backup is restored.") }
         } finally { state.update { it.copy(restorePreview = null) } }
     }
 

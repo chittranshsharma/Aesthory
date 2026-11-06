@@ -72,6 +72,8 @@ Local library delivered: product name/brand/type/size, label/personal notes, web
 
 ## 9. Nutrition screenshots
 
+Delivered: Photo Picker → bundled local OCR → editable review → explicit daily save, with replacement confirmation, duplicate receipts, migration and encrypted recovery. Manual entry works offline. Real calorie-app layouts and share-sheet receiving remain further coverage; see NUTRITION.md.
+
 - Android share receiver/Photo Picker and bundled on-device ML Kit OCR. Start with a real screenshot from the user's calorie app.
 - Editable review: date, consumed calories/macros, units, missing/uncertain values, goals versus remaining amounts. Manual entry works without AI.
 - Screenshot hashes/provenance; updated daily snapshots replace after review, never silently add.

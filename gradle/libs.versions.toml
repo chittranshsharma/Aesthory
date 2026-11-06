@@ -17,6 +17,7 @@ tink = "1.23.0"
 core = "1.18.0"
 
 [libraries]
+mlkit-text = { module = "com.google.mlkit:text-recognition", version = "16.0.1" }
 core = { module = "androidx.core:core", version.ref = "core" }
 junit = { module = "junit:junit", version.ref = "junit" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }

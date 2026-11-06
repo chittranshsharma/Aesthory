@@ -1,0 +1,1406 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "512ce6e08d7d29e324e4bfd18a3716a4",
+    "entities": [
+      {
+        "tableName": "nutrition_days",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`day` INTEGER NOT NULL, `calories` REAL, `protein` REAL, `carbs` REAL, `fat` REAL, `sourceHash` TEXT, `revision` TEXT NOT NULL, `savedAtMillis` INTEGER NOT NULL, PRIMARY KEY(`day`))",
+        "fields": [
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "calories",
+            "columnName": "calories",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "protein",
+            "columnName": "protein",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "carbs",
+            "columnName": "carbs",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "fat",
+            "columnName": "fat",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "sourceHash",
+            "columnName": "sourceHash",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "savedAtMillis",
+            "columnName": "savedAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "day"
+          ]
+        }
+      },
+      {
+        "tableName": "nutrition_imports",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hash` TEXT NOT NULL, `day` INTEGER NOT NULL, PRIMARY KEY(`hash`))",
+        "fields": [
+          {
+            "fieldPath": "hash",
+            "columnName": "hash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "hash"
+          ]
+        }
+      },
+      {
+        "tableName": "profiles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `displayName` TEXT, `ageBand` TEXT NOT NULL, `tone` TEXT NOT NULL, `coaches` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "ageBand",
+            "columnName": "ageBand",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tone",
+            "columnName": "tone",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "coaches",
+            "columnName": "coaches",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "measurements",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `profileId` INTEGER NOT NULL, `recordedAtMillis` INTEGER NOT NULL, `heightCm` REAL, `weightKg` REAL, `waistCm` REAL, `chestCm` REAL, `shoulderCircumferenceCm` REAL, `upperArmCm` REAL, `thighCm` REAL, `bodyFatPercent` REAL, FOREIGN KEY(`profileId`) REFERENCES `profiles`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "profileId",
+            "columnName": "profileId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAtMillis",
+            "columnName": "recordedAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "values.heightCm",
+            "columnName": "heightCm",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "values.weightKg",
+            "columnName": "weightKg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "values.waistCm",
+            "columnName": "waistCm",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "values.chestCm",
+            "columnName": "chestCm",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "values.shoulderCircumferenceCm",
+            "columnName": "shoulderCircumferenceCm",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "values.upperArmCm",
+            "columnName": "upperArmCm",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "values.thighCm",
+            "columnName": "thighCm",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "values.bodyFatPercent",
+            "columnName": "bodyFatPercent",
+            "affinity": "REAL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_measurements_profileId",
+            "unique": false,
+            "columnNames": [
+              "profileId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_measurements_profileId` ON `${TABLE_NAME}` (`profileId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "profiles",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "profileId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "categories",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "routines",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `createdAtMillis` INTEGER NOT NULL, `archived` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtMillis",
+            "columnName": "createdAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archived",
+            "columnName": "archived",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "habits",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `routineId` TEXT NOT NULL, `position` INTEGER NOT NULL, `currentVersion` INTEGER NOT NULL, `state` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`routineId`) REFERENCES `routines`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "routineId",
+            "columnName": "routineId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentVersion",
+            "columnName": "currentVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_habits_routineId",
+            "unique": false,
+            "columnNames": [
+              "routineId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_habits_routineId` ON `${TABLE_NAME}` (`routineId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "routines",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "routineId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "habit_versions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`habitId` TEXT NOT NULL, `version` INTEGER NOT NULL, `title` TEXT NOT NULL, `categoryId` TEXT NOT NULL, `instructions` TEXT NOT NULL, `estimatedMinutes` INTEGER, `purpose` TEXT NOT NULL DEFAULT '', `tags` TEXT NOT NULL DEFAULT '[]', `shortInstructions` TEXT NOT NULL DEFAULT '', `schedule_startDay` INTEGER NOT NULL, `schedule_endDay` INTEGER, `schedule_recurrence` TEXT NOT NULL, `schedule_interval` INTEGER, `schedule_weekdays` TEXT NOT NULL, `tracking_kind` TEXT NOT NULL, `tracking_target` REAL, `tracking_unit` TEXT, `tracking_items` TEXT NOT NULL, PRIMARY KEY(`habitId`, `version`), FOREIGN KEY(`habitId`) REFERENCES `habits`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "categoryId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "instructions",
+            "columnName": "instructions",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estimatedMinutes",
+            "columnName": "estimatedMinutes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "purpose",
+            "columnName": "purpose",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "tags",
+            "columnName": "tags",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'[]'"
+          },
+          {
+            "fieldPath": "shortInstructions",
+            "columnName": "shortInstructions",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "schedule.startDay",
+            "columnName": "schedule_startDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schedule.endDay",
+            "columnName": "schedule_endDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "schedule.recurrence",
+            "columnName": "schedule_recurrence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schedule.interval",
+            "columnName": "schedule_interval",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "schedule.weekdays",
+            "columnName": "schedule_weekdays",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tracking.kind",
+            "columnName": "tracking_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tracking.target",
+            "columnName": "tracking_target",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "tracking.unit",
+            "columnName": "tracking_unit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tracking.items",
+            "columnName": "tracking_items",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "habitId",
+            "version"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_habit_versions_categoryId",
+            "unique": false,
+            "columnNames": [
+              "categoryId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_habit_versions_categoryId` ON `${TABLE_NAME}` (`categoryId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "habits",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "habitId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "categories",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "categoryId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "completion_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `habitId` TEXT NOT NULL, `definitionVersion` INTEGER NOT NULL, `dateDay` INTEGER NOT NULL, `recordedAtMillis` INTEGER NOT NULL, `status` TEXT NOT NULL, `value` REAL, `checkedItems` TEXT NOT NULL, `timedSeconds` INTEGER DEFAULT NULL, FOREIGN KEY(`habitId`, `definitionVersion`) REFERENCES `habit_versions`(`habitId`, `version`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "definitionVersion",
+            "columnName": "definitionVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateDay",
+            "columnName": "dateDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAtMillis",
+            "columnName": "recordedAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "checkedItems",
+            "columnName": "checkedItems",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timedSeconds",
+            "columnName": "timedSeconds",
+            "affinity": "INTEGER",
+            "defaultValue": "NULL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_completion_events_habitId_definitionVersion",
+            "unique": false,
+            "columnNames": [
+              "habitId",
+              "definitionVersion"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_completion_events_habitId_definitionVersion` ON `${TABLE_NAME}` (`habitId`, `definitionVersion`)"
+          },
+          {
+            "name": "index_completion_events_habitId_dateDay",
+            "unique": false,
+            "columnNames": [
+              "habitId",
+              "dateDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_completion_events_habitId_dateDay` ON `${TABLE_NAME}` (`habitId`, `dateDay`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "habit_versions",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "habitId",
+              "definitionVersion"
+            ],
+            "referencedColumns": [
+              "habitId",
+              "version"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "progress_photos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `profileId` INTEGER NOT NULL, `day` INTEGER NOT NULL, `createdAtMillis` INTEGER NOT NULL, `area` TEXT NOT NULL, `view` TEXT NOT NULL, `note` TEXT NOT NULL, `fileKey` TEXT NOT NULL, `sha256` TEXT NOT NULL, `byteCount` INTEGER NOT NULL, `width` INTEGER NOT NULL, `height` INTEGER NOT NULL, `deletedAtMillis` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`profileId`) REFERENCES `profiles`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "profileId",
+            "columnName": "profileId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtMillis",
+            "columnName": "createdAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "area",
+            "columnName": "area",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "view",
+            "columnName": "view",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileKey",
+            "columnName": "fileKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sha256",
+            "columnName": "sha256",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "byteCount",
+            "columnName": "byteCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "width",
+            "columnName": "width",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "height",
+            "columnName": "height",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAtMillis",
+            "columnName": "deletedAtMillis",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_progress_photos_profileId",
+            "unique": false,
+            "columnNames": [
+              "profileId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_progress_photos_profileId` ON `${TABLE_NAME}` (`profileId`)"
+          },
+          {
+            "name": "index_progress_photos_fileKey",
+            "unique": true,
+            "columnNames": [
+              "fileKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_progress_photos_fileKey` ON `${TABLE_NAME}` (`fileKey`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "profiles",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "profileId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "products",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `brand` TEXT NOT NULL, `kind` TEXT NOT NULL, `size` TEXT NOT NULL, `labelNotes` TEXT NOT NULL, `notes` TEXT NOT NULL, `url` TEXT NOT NULL, `openedDay` INTEGER, `expiryDay` INTEGER, `periodMonths` INTEGER, `stock` TEXT NOT NULL, `archived` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brand",
+            "columnName": "brand",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "size",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "labelNotes",
+            "columnName": "labelNotes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "openedDay",
+            "columnName": "openedDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "expiryDay",
+            "columnName": "expiryDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "periodMonths",
+            "columnName": "periodMonths",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "stock",
+            "columnName": "stock",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archived",
+            "columnName": "archived",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "personal_references",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `content` TEXT NOT NULL, `url` TEXT NOT NULL, `sourceDay` INTEGER, `archived` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "content",
+            "columnName": "content",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceDay",
+            "columnName": "sourceDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "archived",
+            "columnName": "archived",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "product_observations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `productId` TEXT NOT NULL, `productName` TEXT NOT NULL, `day` INTEGER NOT NULL, `createdAtMillis` INTEGER NOT NULL, `note` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`productId`) REFERENCES `products`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productId",
+            "columnName": "productId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productName",
+            "columnName": "productName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtMillis",
+            "columnName": "createdAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_product_observations_productId",
+            "unique": false,
+            "columnNames": [
+              "productId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_product_observations_productId` ON `${TABLE_NAME}` (`productId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "products",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "productId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "habit_product_links",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`habitId` TEXT NOT NULL, `version` INTEGER NOT NULL, `productId` TEXT NOT NULL, `name` TEXT NOT NULL, `brand` TEXT NOT NULL, `labelNotes` TEXT NOT NULL, `usageNote` TEXT NOT NULL, PRIMARY KEY(`habitId`, `version`, `productId`), FOREIGN KEY(`habitId`, `version`) REFERENCES `habit_versions`(`habitId`, `version`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`productId`) REFERENCES `products`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productId",
+            "columnName": "productId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brand",
+            "columnName": "brand",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "labelNotes",
+            "columnName": "labelNotes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "usageNote",
+            "columnName": "usageNote",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "habitId",
+            "version",
+            "productId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_habit_product_links_productId",
+            "unique": false,
+            "columnNames": [
+              "productId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_habit_product_links_productId` ON `${TABLE_NAME}` (`productId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "habit_versions",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "habitId",
+              "version"
+            ],
+            "referencedColumns": [
+              "habitId",
+              "version"
+            ]
+          },
+          {
+            "table": "products",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "productId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "habit_reference_links",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`habitId` TEXT NOT NULL, `version` INTEGER NOT NULL, `referenceId` TEXT NOT NULL, `title` TEXT NOT NULL, `content` TEXT NOT NULL, `url` TEXT NOT NULL, `sourceDay` INTEGER, PRIMARY KEY(`habitId`, `version`, `referenceId`), FOREIGN KEY(`habitId`, `version`) REFERENCES `habit_versions`(`habitId`, `version`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`referenceId`) REFERENCES `personal_references`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "referenceId",
+            "columnName": "referenceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "content",
+            "columnName": "content",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceDay",
+            "columnName": "sourceDay",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "habitId",
+            "version",
+            "referenceId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_habit_reference_links_referenceId",
+            "unique": false,
+            "columnNames": [
+              "referenceId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_habit_reference_links_referenceId` ON `${TABLE_NAME}` (`referenceId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "habit_versions",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "habitId",
+              "version"
+            ],
+            "referencedColumns": [
+              "habitId",
+              "version"
+            ]
+          },
+          {
+            "table": "personal_references",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "referenceId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "weekly_targets",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`startDay` INTEGER NOT NULL, `completed` INTEGER, `minutes` INTEGER, PRIMARY KEY(`startDay`))",
+        "fields": [
+          {
+            "fieldPath": "startDay",
+            "columnName": "startDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completed",
+            "columnName": "completed",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "minutes",
+            "columnName": "minutes",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "startDay"
+          ]
+        }
+      },
+      {
+        "tableName": "active_timer",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `sessionId` TEXT NOT NULL, `habitId` TEXT NOT NULL, `definitionVersion` INTEGER NOT NULL, `day` INTEGER NOT NULL, `accumulatedMillis` INTEGER NOT NULL, `startedElapsedMillis` INTEGER, `startedWallMillis` INTEGER, `boot` INTEGER NOT NULL, `goalMillis` INTEGER, `goalAlerted` INTEGER NOT NULL, `recovery` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`habitId`, `definitionVersion`) REFERENCES `habit_versions`(`habitId`, `version`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "sessionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "definitionVersion",
+            "columnName": "definitionVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accumulatedMillis",
+            "columnName": "accumulatedMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedElapsedMillis",
+            "columnName": "startedElapsedMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "startedWallMillis",
+            "columnName": "startedWallMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "boot",
+            "columnName": "boot",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "goalMillis",
+            "columnName": "goalMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "goalAlerted",
+            "columnName": "goalAlerted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recovery",
+            "columnName": "recovery",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_active_timer_habitId_definitionVersion",
+            "unique": false,
+            "columnNames": [
+              "habitId",
+              "definitionVersion"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_active_timer_habitId_definitionVersion` ON `${TABLE_NAME}` (`habitId`, `definitionVersion`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "habit_versions",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "habitId",
+              "definitionVersion"
+            ],
+            "referencedColumns": [
+              "habitId",
+              "version"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "habit_reminders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`habitId` TEXT NOT NULL, `minuteOfDay` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, PRIMARY KEY(`habitId`), FOREIGN KEY(`habitId`) REFERENCES `habits`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "minuteOfDay",
+            "columnName": "minuteOfDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "habitId"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "habits",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "habitId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "reminder_preferences",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `quietEnabled` INTEGER NOT NULL, `quietStart` INTEGER NOT NULL, `quietEnd` INTEGER NOT NULL, `paused` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quietEnabled",
+            "columnName": "quietEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quietStart",
+            "columnName": "quietStart",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quietEnd",
+            "columnName": "quietEnd",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paused",
+            "columnName": "paused",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "reminder_runtime",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`habitId` TEXT NOT NULL, `nextAtMillis` INTEGER, `nextDay` INTEGER, `token` TEXT NOT NULL, `snoozed` INTEGER NOT NULL, `deliveredDay` INTEGER, `deliveredToken` TEXT, PRIMARY KEY(`habitId`), FOREIGN KEY(`habitId`) REFERENCES `habit_reminders`(`habitId`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "fields": [
+          {
+            "fieldPath": "habitId",
+            "columnName": "habitId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nextAtMillis",
+            "columnName": "nextAtMillis",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "nextDay",
+            "columnName": "nextDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "token",
+            "columnName": "token",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "snoozed",
+            "columnName": "snoozed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deliveredDay",
+            "columnName": "deliveredDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "deliveredToken",
+            "columnName": "deliveredToken",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "habitId"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "habit_reminders",
+            "onDelete": "NO ACTION",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "habitId"
+            ],
+            "referencedColumns": [
+              "habitId"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '512ce6e08d7d29e324e4bfd18a3716a4')"
+    ]
+  }
+}

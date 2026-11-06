@@ -45,6 +45,8 @@ class VaultDeviceTest {
         val day = LocalDate.of(2026, 10, 31)
         try {
             repo.saveProfile(ProfileBaseline(displayName = "Original"))
+            val nutrition = app.aesthory.nutrition.NutritionDay(day.toEpochDay(), 1800.0, 100.0, null, 60.0, "a".repeat(64), savedAtMillis = 123)
+            repo.saveNutrition(nutrition, null)
             repo.saveProduct(ProductEntity("product", "Original product", labelNotes = "Label"))
             repo.saveReference(ReferenceEntity("reference", "Source", "Private reference text"))
             repo.addObservation("product", day, "Dated observation")
@@ -90,6 +92,8 @@ class VaultDeviceTest {
             val preview = vault.previewRestore(Uri.fromFile(backup), "test-only नमस्ते password".toCharArray())
             assertEquals("Current", db.records().getProfile()!!.displayName)
             vault.restoreBackup(preview.token)
+            assertEquals(nutrition, repo.nutritionOn(day.toEpochDay()))
+            assertEquals(app.aesthory.nutrition.NutritionSave.Duplicate(day.toEpochDay()), repo.saveNutrition(nutrition, null))
             assertEquals("Original", db.records().getProfile()!!.displayName)
             assertFalse(db.records().getTimer()!!.running)
             assertEquals(TimerRecovery.BACKUP, db.records().getTimer()!!.recovery)

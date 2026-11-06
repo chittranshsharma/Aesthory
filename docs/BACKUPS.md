@@ -45,3 +45,5 @@ Limits: 512 MiB backup and inflated payload; 500 photos; 8 MiB per saved JPEG; 1
 ## Verification
 
 Unit coverage includes multisegment encryption, random ciphertext/Unicode passwords, wrong passwords, header/tag tampering/truncation, future versions, bounded parsing, invalid records, transaction rollback, snapshot roundtrip, live Flow refresh and migration from the exported v1 schema. The Android vault test covers rotated/location-tagged JPEGs, metadata removal, source independence, thumbnail regeneration, encrypted photo/bin recovery, credential/model preservation and failed installation leaving current data intact. Current executed counts and rendered/manual checks live in STATUS.md. Emulator checks do not establish physical-phone performance or a complete accessibility/security audit.
+
+Nutrition update: payload schema 6 adds daily totals and duplicate-image receipts, reads payloads 2–5, and excludes screenshot images and OCR text. Room migration 5→6 preserves existing records. See NUTRITION.md.
