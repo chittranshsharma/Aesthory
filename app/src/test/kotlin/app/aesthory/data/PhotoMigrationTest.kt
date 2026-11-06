@@ -40,7 +40,7 @@ class PhotoMigrationTest {
             old.execSQL("INSERT INTO completion_events VALUES (1, 'habit', 1, 20000, 10, 'DONE', NULL, '[]')")
             old.version = 1
         }
-        val upgraded = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_1_2, AesthoryDatabase.MIGRATION_2_3, AesthoryDatabase.MIGRATION_3_4, AesthoryDatabase.MIGRATION_4_5, AesthoryDatabase.MIGRATION_5_6).build()
+        val upgraded = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_1_2, AesthoryDatabase.MIGRATION_2_3, AesthoryDatabase.MIGRATION_3_4, AesthoryDatabase.MIGRATION_4_5, AesthoryDatabase.MIGRATION_5_6, AesthoryDatabase.MIGRATION_6_7).build()
         try {
             assertEquals("Old profile", upgraded.records().getProfile()!!.displayName)
             assertEquals(180.0, upgraded.records().allMeasurements().single().values.heightCm!!, 0.0)

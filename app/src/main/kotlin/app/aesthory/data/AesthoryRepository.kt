@@ -17,6 +17,7 @@ import java.util.UUID
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import app.aesthory.library.*
+import app.aesthory.workouts.*
 
 data class HabitDraft(
     val title: String,
@@ -47,6 +48,23 @@ data class HistoryEntry(val event: CompletionEventEntity, val definition: HabitV
 
 class AesthoryRepository(private val db: AesthoryDatabase, private val clock: Clock = Clock.systemUTC()) {
     private val dao = db.records()
+    val workouts = dao.observeWorkouts()
+    suspend fun previewWorkouts(incoming: List<WorkoutBundle>): WorkoutPreview = db.withTransaction {
+        require(incoming.size in 1..1000 && incoming.map { it.workout.id }.distinct().size == incoming.size)
+        incoming.forEach(::validateWorkout)
+        WorkoutPreview(incoming.map { WorkoutCandidate(it, dao.workout(it.workout.id)) })
+    }
+    // Return a fresh preview if any record changed since review; no partial writes.
+    suspend fun saveWorkouts(preview: WorkoutPreview, replaceChanged: Boolean): WorkoutPreview? = db.withTransaction {
+        val fresh = previewWorkouts(preview.items.map { it.incoming })
+        if (fresh.items.zip(preview.items).any { (now, before) -> now.existing?.workout?.revision != before.existing?.workout?.revision } || (fresh.changed > 0 && !replaceChanged)) return@withTransaction fresh
+        fresh.items.filterNot { it.unchanged }.forEach { item ->
+            dao.saveWorkout(item.incoming.workout.copy(revision = UUID.randomUUID().toString()))
+            dao.clearWorkoutSets(item.incoming.workout.id)
+            dao.insertWorkoutSets(item.incoming.sets)
+        }
+        null
+    }
     val nutrition = dao.observeNutrition()
     suspend fun nutritionOn(day: Long) = dao.nutritionOn(day)
     suspend fun nutritionImport(hash: String) = dao.nutritionImport(hash)

@@ -2,6 +2,8 @@ package app.aesthory.ui
 
 import android.net.Uri
 import app.aesthory.nutrition.*
+import app.aesthory.workouts.*
+import java.time.ZoneId
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aesthory.coaching.GroqConnection
@@ -46,7 +48,10 @@ import kotlinx.coroutines.withContext
 
 data class NutritionDraft(val scan: NutritionScan?, val existing: NutritionDay? = null, val token: String = java.util.UUID.randomUUID().toString())
 
+data class WorkoutDraft(val bytes: ByteArray, val zone: String, val preview: WorkoutPreview, val token: String = java.util.UUID.randomUUID().toString())
+
 data class AppState(
+    val workoutDraft: WorkoutDraft? = null,
     val nutritionDraft: NutritionDraft? = null,
     val nutritionConflict: NutritionDay? = null,
     val timingStatus: TimingStatus = TimingStatus(false, false, false, false),
@@ -89,8 +94,26 @@ class MainViewModel(
     private val referenceFiles: ReferenceFiles,
     private val timing: TimingController,
     private val nutritionOcr: NutritionOcr,
+    private val workoutFiles: WorkoutFiles,
 ) : ViewModel() {
     private val state = MutableStateFlow(AppState())
+    val workouts = repository.workouts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    fun importWorkouts(uri: Uri) = action("Choose an original Hevy workout CSV under 5 MB. Your saved workouts are unchanged.") {
+        val bytes = workoutFiles.read(uri)
+        prepareWorkouts(bytes, timing.clock.now().zone.id)
+    }
+    private suspend fun prepareWorkouts(bytes: ByteArray, zone: String) {
+        val preview = withContext(Dispatchers.IO) { repository.previewWorkouts(HevyCsv.parse(bytes, ZoneId.of(zone))) }
+        state.update { it.copy(workoutDraft = WorkoutDraft(bytes, zone, preview)) }
+    }
+    fun workoutTimezone(zone: String) = action("Choose a valid time zone, such as Asia/Kolkata or Europe/London.") { prepareWorkouts(requireNotNull(state.value.workoutDraft).bytes, zone.trim()) }
+    fun discardWorkouts() { if (!state.value.busy) state.update { it.copy(workoutDraft = null) } }
+    fun saveWorkouts(replaceChanged: Boolean) = action {
+        val draft = requireNotNull(state.value.workoutDraft)
+        val fresh = withContext(Dispatchers.IO) { repository.saveWorkouts(draft.preview, replaceChanged) }
+        if (fresh == null) state.update { it.copy(workoutDraft = null, message = "Workouts saved. ${draft.preview.skipped} already-saved workouts skipped.") }
+        else state.update { it.copy(workoutDraft = draft.copy(preview = fresh, token = java.util.UUID.randomUUID().toString()), message = "Your saved workouts changed. Review the updated comparison before saving.") }
+    }
     val nutrition = repository.nutrition.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     fun importNutrition(uri: Uri) = action("We couldn't read that image. Choose a PNG, JPEG or WebP screenshot under 20 MB, or enter your totals manually.") {
         val scan = nutritionOcr.scan(uri)
@@ -292,7 +315,7 @@ class MainViewModel(
         try {
             timing.prepareForRestore()
             try { vault.restoreBackup(requireNotNull(state.value.restorePreview).token) } finally { timing.refresh() }
-            state.update { it.copy(restorePreview = null, restoreComplete = true, nutritionDraft = null, nutritionConflict = null, photo = null, offlineText = null, editingPhoto = null, photoSource = null, saveAnalyzedPhoto = false, message = "Your backup is restored.") }
+            state.update { it.copy(restorePreview = null, restoreComplete = true, workoutDraft = null, nutritionDraft = null, nutritionConflict = null, photo = null, offlineText = null, editingPhoto = null, photoSource = null, saveAnalyzedPhoto = false, message = "Your backup is restored.") }
         } finally { state.update { it.copy(restorePreview = null) } }
     }
 
@@ -343,7 +366,7 @@ class MainViewModel(
             try { block() }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (failure: Exception) {
-                val message = (failure as? app.aesthory.backup.VaultUserError)?.message ?: errorMessage ?: when (failure) {
+                val message = (failure as? WorkoutImportError)?.message ?: (failure as? app.aesthory.backup.VaultUserError)?.message ?: errorMessage ?: when (failure) {
                     is IllegalArgumentException -> "Check the entered values or selected file and try again."
                     is java.io.IOException -> "The file or connection could not be read. Your saved records are unchanged."
                     else -> "We couldn't finish that. Check what you entered or try again in a moment."

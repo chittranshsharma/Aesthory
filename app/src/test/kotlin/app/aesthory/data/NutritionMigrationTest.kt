@@ -41,7 +41,7 @@ class NutritionMigrationTest {
             data.getJSONArray("weekly_targets").put(JSONObject().put("startDay", day).put("completed", 5).put("minutes", 90))
             old.version = 5
         }
-        val db = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_5_6).build()
+        val db = Room.databaseBuilder(context, AesthoryDatabase::class.java, name).addMigrations(AesthoryDatabase.MIGRATION_5_6, AesthoryDatabase.MIGRATION_6_7).build()
         try {
             assertEquals(5, db.records().allWeeklyTargets().single().completed)
             assertTrue(db.records().allNutrition().isEmpty())

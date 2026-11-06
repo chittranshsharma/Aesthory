@@ -16,7 +16,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
 
-data class BackupSummary(val createdAtMillis: Long, val routines: Int, val checkIns: Int, val photos: Int, val binnedPhotos: Int, val products: Int = 0, val references: Int = 0, val reminders: Int = 0, val timers: Int = 0, val nutritionDays: Int = 0)
+data class BackupSummary(val createdAtMillis: Long, val routines: Int, val checkIns: Int, val photos: Int, val binnedPhotos: Int, val products: Int = 0, val references: Int = 0, val reminders: Int = 0, val timers: Int = 0, val nutritionDays: Int = 0, val workouts: Int = 0)
 
 /** Exact allowlist: credentials, preferences and optional model files cannot enter this format. */
 object RecordSnapshot {
@@ -26,7 +26,8 @@ object RecordSnapshot {
         "habits", "habit_versions", "habit_product_links", "habit_reference_links", "completion_events", "progress_photos")
     private val v4Tables = v3Tables + listOf("active_timer", "habit_reminders", "reminder_preferences")
     private val v5Tables = v4Tables + "weekly_targets"
-    val tables = v5Tables + listOf("nutrition_days", "nutrition_imports")
+    private val v6Tables = v5Tables + listOf("nutrition_days", "nutrition_imports")
+    val tables = v6Tables + listOf("workouts", "workout_sets")
     suspend fun capture(db: AesthoryDatabase, at: Long, moment: TimingMoment? = null): JSONObject = db.withTransaction {
         val data = JSONObject()
         tables.forEach { table ->
@@ -55,7 +56,7 @@ object RecordSnapshot {
                 .put("startedElapsedMillis", JSONObject.NULL).put("startedWallMillis", JSONObject.NULL).put("recovery", TimerRecovery.BACKUP.name)
         }
         data.getJSONArray("reminder_preferences").let { rows -> repeat(rows.length()) { rows.getJSONObject(it).put("paused", 1) } }
-        JSONObject().put("format", 1).put("schema", 6).put("createdAtMillis", at).put("tables", data)
+        JSONObject().put("format", 1).put("schema", 7).put("createdAtMillis", at).put("tables", data)
     }
     fun encode(snapshot: JSONObject): ByteArray = snapshot.toString().toByteArray(Charsets.UTF_8).also { require(it.size <= MAX_BYTES) }
     fun decode(bytes: ByteArray): JSONObject {
@@ -65,7 +66,7 @@ object RecordSnapshot {
         val parser = JSONTokener(text)
         val root = parser.nextValue() as? JSONObject ?: error("Invalid backup records")
         require(parser.nextClean().code == 0 && root.keys().asSequence().toSet() == setOf("format", "schema", "createdAtMillis", "tables"))
-        if (root.get("format").toString() != "1" || root.get("schema").toString() !in setOf("2", "3", "4", "5", "6")) throw VaultUserError("This backup version isn't supported here. Keep the file and update Aesthory before trying again.")
+        if (root.get("format").toString() != "1" || root.get("schema").toString() !in setOf("2", "3", "4", "5", "6", "7")) throw VaultUserError("This backup version isn't supported here. Keep the file and update Aesthory before trying again.")
         require(root.get("createdAtMillis").toString().toLong() >= 0)
         if (root.get("schema").toString() == "2") {
             val data = root.getJSONObject("tables")
@@ -99,6 +100,12 @@ object RecordSnapshot {
             data.put("nutrition_days", JSONArray()).put("nutrition_imports", JSONArray())
             root.put("schema", 6)
         }
+        if (root.get("schema").toString() == "6") {
+            val data = root.getJSONObject("tables")
+            require(data.keys().asSequence().toSet() == v6Tables.toSet())
+            data.put("workouts", JSONArray()).put("workout_sets", JSONArray())
+            root.put("schema", 7)
+        }
         // A restored clock never runs by itself, and imported reminder schedules start paused.
         root.getJSONObject("tables").getJSONArray("reminder_preferences").let { rows -> repeat(rows.length()) {
             val row = rows.getJSONObject(it)
@@ -113,13 +120,14 @@ object RecordSnapshot {
         val photos = data.getJSONArray("progress_photos")
         val binned = (0 until photos.length()).count { !photos.getJSONObject(it).isNull("deletedAtMillis") }
         return BackupSummary(snapshot.getLong("createdAtMillis"), data.getJSONArray("routines").length(), data.getJSONArray("completion_events").length(), photos.length(), binned,
-            data.getJSONArray("products").length(), data.getJSONArray("personal_references").length(), data.getJSONArray("habit_reminders").length(), data.getJSONArray("active_timer").length(), data.getJSONArray("nutrition_days").length())
+            data.getJSONArray("products").length(), data.getJSONArray("personal_references").length(), data.getJSONArray("habit_reminders").length(), data.getJSONArray("active_timer").length(), data.getJSONArray("nutrition_days").length(), data.getJSONArray("workouts").length())
     }
     suspend fun validate(context: Context, snapshot: JSONObject) {
         val staging = Room.inMemoryDatabaseBuilder(context, AesthoryDatabase::class.java).build()
         try {
             replace(staging, snapshot)
             val dao = staging.records()
+            dao.allWorkouts().forEach { app.aesthory.workouts.validateWorkout(it) }
             val nutrition = dao.allNutrition()
             val receipts = dao.allNutritionImports().associateBy { it.hash }
             nutrition.forEach { row -> row.sourceHash?.let { require(receipts[it]?.day == row.day) } }
@@ -182,6 +190,11 @@ object RecordSnapshot {
                             if (column in setOf("archived", "enabled", "paused", "quietEnabled", "goalAlerted")) require(number in 0..1)
                             if (column in setOf("minuteOfDay", "quietStart", "quietEnd")) require(number in 0..1439)
                             if (column == "boot") require(number in -1..Int.MAX_VALUE)
+                            if (table == "workout_sets") when (column) {
+                                "position" -> require(number in 0..1999)
+                                "setIndex" -> require(number in 0..999)
+                                "reps" -> require(number in 0..100000)
+                            }
                             if (table == "weekly_targets" && column == "completed") require(number in 1..10000)
                             if (table == "weekly_targets" && column == "minutes") require(number in 1..10080)
                             values.put(column, number)

@@ -81,6 +81,8 @@ Delivered: Photo Picker → bundled local OCR → editable review → explicit d
 
 ## 10. Hevy imports
 
+Delivered: bounded local CSV import with review, explicit timezone/source units, exercise/set history, unchanged-workout skipping and confirmed transactional replacement. Room/backup schema 7 preserve histories; see WORKOUTS.md. Actual user exports, shared text, start-time correction and deletion remain follow-up work.
+
 - Obtain actual CSV/shared-text samples; use a maintained CSV parser, preserving units/dates/exercises/sets/provenance.
 - Preview, transactions, duplicates, explicit corrected-export conflicts, exercise history and workout summaries. Food intake and activity energy remain separate metrics.
 - Gate: repeated import is idempotent; quoted commas/newlines, unit/date variants, partial files, and rollback are tested. No paid API.

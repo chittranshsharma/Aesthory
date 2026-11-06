@@ -43,7 +43,7 @@ internal fun NutritionScreen(model: MainViewModel, onBack: () -> Unit) {
         item { TextButton(enabled = !state.busy, onClick = { model.manualNutrition() }) { Text("Enter totals myself") } }
         item { Text("One snapshot per day. New totals replace that day's entry after you confirm; they are never added together. Screenshots are not kept or uploaded.", style = MaterialTheme.typography.bodySmall) }
         if (entries.isEmpty()) item { Text("No nutrition saved yet. Start with a screenshot or enter what you know.") }
-        else item { SectionHeading("Your saved days", "Latest 366 entries. Older records stay in your backup.") }
+        else item { SectionHeading("Your saved days", "Showing your latest 366 entries. Older entries remain saved on this phone.") }
         items(entries, key = { it.day }) { entry ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(nutritionDate(entry.day), style = MaterialTheme.typography.titleLarge)

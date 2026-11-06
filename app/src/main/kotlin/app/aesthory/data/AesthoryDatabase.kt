@@ -16,6 +16,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import app.aesthory.progress.ProgressPhoto
 import app.aesthory.library.*
 import app.aesthory.timing.*
+import app.aesthory.workouts.*
+import androidx.room.Transaction
 import app.aesthory.coaching.CoachMode
 import app.aesthory.routines.HabitState
 import kotlinx.coroutines.flow.Flow
@@ -33,6 +35,13 @@ class DatabaseConverters {
 
 @Dao
 interface AesthoryDao {
+    @Transaction @Query("SELECT * FROM workouts ORDER BY startMillis DESC LIMIT 1000") fun observeWorkouts(): Flow<List<WorkoutBundle>>
+    @Transaction @Query("SELECT * FROM workouts WHERE id = :id") suspend fun workout(id: String): WorkoutBundle?
+    @Transaction @Query("SELECT * FROM workouts") suspend fun allWorkouts(): List<WorkoutBundle>
+    @Upsert suspend fun saveWorkout(workout: Workout)
+    @Insert suspend fun insertWorkoutSets(sets: List<WorkoutSet>)
+    @Query("DELETE FROM workout_sets WHERE workoutId = :id") suspend fun clearWorkoutSets(id: String)
+
     @Query("SELECT * FROM nutrition_days ORDER BY day DESC LIMIT 366") fun observeNutrition(): Flow<List<app.aesthory.nutrition.NutritionDay>>
     @Query("SELECT * FROM nutrition_days WHERE day = :day") suspend fun nutritionOn(day: Long): app.aesthory.nutrition.NutritionDay?
     @Query("SELECT * FROM nutrition_days") suspend fun allNutrition(): List<app.aesthory.nutrition.NutritionDay>
@@ -129,17 +138,24 @@ interface AesthoryDao {
 }
 
 @Database(
-    entities = [app.aesthory.nutrition.NutritionDay::class, app.aesthory.nutrition.NutritionImport::class, ProfileEntity::class, MeasurementEntity::class, CategoryEntity::class,
+    entities = [Workout::class, WorkoutSet::class, app.aesthory.nutrition.NutritionDay::class, app.aesthory.nutrition.NutritionImport::class, ProfileEntity::class, MeasurementEntity::class, CategoryEntity::class,
         RoutineEntity::class, HabitEntity::class, HabitVersionEntity::class, CompletionEventEntity::class, ProgressPhoto::class,
         ProductEntity::class, ReferenceEntity::class, ProductObservation::class, HabitProductLink::class, HabitReferenceLink::class,
         app.aesthory.progress.WeeklyTarget::class, ActiveTimer::class, HabitReminder::class, ReminderPreferences::class, ReminderRuntime::class],
-    version = 6, exportSchema = true,
+    version = 7, exportSchema = true,
 )
 @TypeConverters(DatabaseConverters::class)
 abstract class AesthoryDatabase : RoomDatabase() {
     abstract fun records(): AesthoryDao
 
     companion object {
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE workouts (id TEXT NOT NULL PRIMARY KEY, title TEXT NOT NULL, startLocal TEXT NOT NULL, endLocal TEXT NOT NULL, zone TEXT NOT NULL, startMillis INTEGER NOT NULL, endMillis INTEGER NOT NULL, description TEXT NOT NULL, contentHash TEXT NOT NULL, sourceHash TEXT NOT NULL, revision TEXT NOT NULL)")
+                db.execSQL("CREATE TABLE workout_sets (workoutId TEXT NOT NULL, position INTEGER NOT NULL, exercise TEXT NOT NULL, setIndex INTEGER NOT NULL, type TEXT NOT NULL, weight REAL, weightUnit TEXT NOT NULL, reps INTEGER, distance REAL, distanceUnit TEXT NOT NULL, seconds REAL, rpe REAL, superset TEXT NOT NULL, notes TEXT NOT NULL, PRIMARY KEY(workoutId, position), FOREIGN KEY(workoutId) REFERENCES workouts(id) ON UPDATE NO ACTION ON DELETE CASCADE)")
+            }
+        }
+
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE nutrition_days (day INTEGER NOT NULL PRIMARY KEY, calories REAL, protein REAL, carbs REAL, fat REAL, sourceHash TEXT, revision TEXT NOT NULL, savedAtMillis INTEGER NOT NULL)")
@@ -185,6 +201,6 @@ abstract class AesthoryDatabase : RoomDatabase() {
         }
         fun open(context: Context) = Room.databaseBuilder(
             context.applicationContext, AesthoryDatabase::class.java, "aesthory.db",
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).build()
     }
 }

@@ -6,6 +6,7 @@ An Android appearance coach for facial aesthetics, skin, hair and physique, supp
 
 - Built-in coaching from first launch: five starter routines, next-action suggestions and 11 searchable care/style/looksmaxing guides. No model download or API key needed.
 - Nutrition screenshot import: bundled on-device OCR, editable date/calories/macros, explicit daily replacement and duplicate-image protection. Manual entry works offline.
+- Hevy workout CSV import: local preview, source units/time zone, exercise/set history, duplicate skipping and explicit corrected-workout replacement. Included in encrypted backups.
 - No-email setup and optional dated baseline measurements.
 - Persistent routines, daily habits, instructions, estimated duration, completion and undo.
 - Detailed habit editor: custom days/intervals, six tracking types, categories/tags, busy-day instructions, partial/skip logging, ordering and saved-instruction history.
@@ -23,7 +24,7 @@ An Android appearance coach for facial aesthetics, skin, hair and physique, supp
 
 The bundled face model is pretrained MediaPipe, not a newly trained PSL or facial-bone model. Selfie proportions are not hidden skeletal measurements or clinical findings. Optional language-model weights are not included, downloaded automatically or quality-validated yet. Analysis previews are temporary unless you choose “Keep as a progress photo”; journal photos persist independently of analysis.
 
-Health Connect/Google Health, Hevy, broader specialist retrieval and live Notion/Obsidian connections are subsequent milestones, not active integrations. References currently support text/Markdown and web links, not PDF/image attachments. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [habit/library guide](docs/HABITS.md), [timers/reminders](docs/TIMING.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
+Health Connect/Google Health, broader specialist retrieval and live Notion/Obsidian connections are subsequent milestones, not active integrations. References currently support text/Markdown and web links, not PDF/image attachments. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [habit/library guide](docs/HABITS.md), [timers/reminders](docs/TIMING.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
 
 ## Build and run
 
