@@ -17,6 +17,7 @@ tink = "1.23.0"
 core = "1.18.0"
 
 [libraries]
+health-connect = { module = "androidx.health.connect:connect-client", version = "1.1.0" }
 commons-csv = { module = "org.apache.commons:commons-csv", version = "1.14.1" }
 mlkit-text = { module = "com.google.mlkit:text-recognition", version = "16.0.1" }
 core = { module = "androidx.core:core", version.ref = "core" }

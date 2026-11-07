@@ -464,6 +464,7 @@ private fun ProfileScreen(model: MainViewModel) {
         when (section) {
             "photos" -> ProgressScreen(model) { section = null }
             "library" -> LibraryScreen(model) { section = null }
+            "steps" -> StepsScreen(model) { section = null }
             "workouts" -> WorkoutsScreen(model) { section = null }
             "nutrition" -> NutritionScreen(model) { section = null }
             "weekly" -> WeeklyScreen(model) { section = null }
@@ -492,6 +493,7 @@ private fun ProfileScreen(model: MainViewModel) {
         Button(onClick = { editing = true }) { Text("About you & your goals") }
         FilledTonalButton(onClick = { section = "photos" }) { Text("My progress photos") }
         FilledTonalButton(onClick = { section = "library" }) { Text("Products & references") }
+        FilledTonalButton(onClick = { section = "steps" }) { Text("Daily steps") }
         FilledTonalButton(onClick = { section = "workouts" }) { Text("Workouts") }
         FilledTonalButton(onClick = { section = "nutrition" }) { Text("Nutrition") }
         FilledTonalButton(onClick = { section = "weekly" }) { Text("Weekly review & targets") }

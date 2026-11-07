@@ -13,6 +13,7 @@ import app.aesthory.backup.PersonalVault
 class AesthoryApplication : Application() {
     private val database by lazy { AesthoryDatabase.open(this) }
     val repository by lazy { AesthoryRepository(database) }
+    val steps by lazy { app.aesthory.health.StepsRepository(app.aesthory.health.AndroidStepsSource(this)) }
     val workoutFiles by lazy { app.aesthory.workouts.WorkoutFiles(this) }
     val nutritionOcr by lazy { app.aesthory.nutrition.NutritionOcr(this) }
     val faceAnalyzer by lazy { LocalFaceAnalyzer(this) }

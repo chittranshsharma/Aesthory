@@ -9,6 +9,7 @@ Android appearance-coaching app: skin, hair, facial aesthetics, physique, and pe
 - Setup/profile work: `docs/ONBOARDING_SPEC.md`. AI/image work: `docs/COACHING_SPEC.md`; load only the selected coach's prompt asset.
 - Backup/photo persistence work: `docs/BACKUPS.md` describes format, limits and recovery invariants.
 - Habit/editor/library work: `docs/HABITS.md` covers versioned links, import/sharing boundaries and current limits.
+- Steps work: `docs/HEALTH_CONNECT.md` covers permissions, aggregation, calendar boundaries and live-view privacy.
 - Nutrition work: `docs/NUTRITION.md` covers OCR bounds, review, duplicate receipts and snapshot replacement.
 - Workout work: `docs/WORKOUTS.md` covers Hevy formats, dates/units, review, identity limits and transactional replacement.
 - Timer/reminder work: `docs/TIMING.md` covers clock anchors, delivery, permissions and portable recovery.

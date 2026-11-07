@@ -21,6 +21,10 @@ Open **Today** to see what’s due, start a timer, or log a quick check-in. Buil
 - **Get practical coaching.** Browse built-in guides for skin, hair, style, and physique. The on-device face check measures visible proportions from a selfie, gives framing feedback, and suggests styling options based on your goal.
 - **Keep a product and reference library.** Save products, dated observations, web links, and notes imported from text or Markdown. Reuse them across routines.
 
+## Keep your steps in view
+
+Connect Health Connect under **You → Daily steps** to see seven days of activity from your connected fitness apps. Refresh for updated totals, see when they were checked, and manage access through Health Connect. Daily totals follow Health Connect’s source priorities for overlapping activity.
+
 ## Bring your training and nutrition together
 
 <table>

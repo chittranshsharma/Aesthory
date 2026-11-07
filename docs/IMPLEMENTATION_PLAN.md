@@ -89,6 +89,8 @@ Delivered: bounded local CSV import with review, explicit timezone/source units,
 
 ## 11. Health Connect and optional Google Health cloud
 
+Delivered: foreground read-only Health Connect steps, seven-day calendar view, permission/provider states, source/freshness details and platform aggregate deduplication. Refresh replaces an in-memory view. Real source sharing and overlap on hardware, plus optional cloud authorization, remain validation/integration work. See HEALTH_CONNECT.md.
+
 - Verify records actually shared by the user's Fitbit/Google Health app. Health Connect is the local broker; Google Health API is separate OAuth cloud access.
 - Steps read access first; aggregation/source/freshness, foreground/manual refresh, revoked/missing data. Background/history permissions only for demonstrated needs.
 - Investigate cloud access for missing history/device records: free access, scopes/quotas, secure native OAuth, and no packaged confidential client secret. If secure no-server authorization is unavailable, retain local/manual options and document the gap.

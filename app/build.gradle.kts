@@ -14,8 +14,8 @@ android {
         applicationId = "app.aesthory"
         minSdk = 28
         targetSdk = 37
-        versionCode = 7
-        versionName = "0.7.0"
+        versionCode = 8
+        versionName = "0.8.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -41,6 +41,7 @@ kotlin {
 
 dependencies {
     implementation(libs.core)
+    implementation(libs.health.connect)
     implementation(libs.mlkit.text)
     implementation(libs.commons.csv)
     implementation(libs.room.runtime)

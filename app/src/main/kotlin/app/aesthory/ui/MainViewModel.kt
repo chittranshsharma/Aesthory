@@ -95,8 +95,12 @@ class MainViewModel(
     private val timing: TimingController,
     private val nutritionOcr: NutritionOcr,
     private val workoutFiles: WorkoutFiles,
+    private val steps: app.aesthory.health.StepsRepository,
 ) : ViewModel() {
     private val state = MutableStateFlow(AppState())
+    val dailySteps = steps.state
+    suspend fun refreshSteps() = steps.refresh()
+    fun clearStepsView() = steps.clearView()
     val workouts = repository.workouts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     fun importWorkouts(uri: Uri) = action("Choose an original Hevy workout CSV under 5 MB. Your saved workouts are unchanged.") {
         val bytes = workoutFiles.read(uri)
