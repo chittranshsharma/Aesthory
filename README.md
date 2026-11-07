@@ -1,51 +1,61 @@
+<div align="center">
+
 # Aesthory
 
-An Android appearance coach for facial aesthetics, skin, hair and physique, supported by personal routines and private progress. Local records, optional AI, free services, no social feed or required account.
+**Your looksmaxing routine. Your training log. Your private progress journal.**
 
-## Usable development build
+A personal Android app for skin, hair, facial aesthetics, physique, and the habits that tie them together.
 
-- Built-in coaching from first launch: five starter routines, next-action suggestions and 11 searchable care/style/looksmaxing guides. No model download or API key needed.
-- Nutrition screenshot import: bundled on-device OCR, editable date/calories/macros, explicit daily replacement and duplicate-image protection. Manual entry works offline.
-- Hevy workout CSV import: local preview, source units/time zone, exercise/set history, duplicate skipping and explicit corrected-workout replacement. Included in encrypted backups.
-- No-email setup and optional dated baseline measurements.
-- Persistent routines, daily habits, instructions, estimated duration, completion and undo.
-- Detailed habit editor: custom days/intervals, six tracking types, categories/tags, busy-day instructions, partial/skip logging, ordering and saved-instruction history.
-- Running timers: saved pause/resume state, app-restart recovery, original-instruction history and explicit review before logging. Phone reboot recovery pauses an estimated time for review.
-- Weekly review and optional per-week completion/minute targets, with saved history and backup recovery.
-- Local reminders: action schedules, quiet hours, snooze, pause-all, grouped notifications and permission checks. Optional precise timer-goal alerts; routine reminders follow Android's approximate delivery.
-- Reusable products and notes/links with local text/Markdown import, dated observations, search, archive/recovery and versioned habit links. No extra account or AI needed.
-- On-device landmarks, recapture feedback and six apparent facial-proportion measurements. Reversible styling options follow your chosen goal.
-- Routine JSON files: preview, save and import independent copies without private history; repeated imports are detected.
-- Readable routine text plans; private product/reference content stays out of both sharing formats.
-- Private progress-photo journal: date, area, view, notes, earlier/later comparison and Recently deleted with undo.
-- Password-protected full backups through Android's file picker, checked before an explicit replace-and-restore confirmation. Restore also works from setup.
-- Extra LiteRT-LM imports and Groq key settings are optional advanced tools. Groq currently tests connection only; extra language-model weights remain unevaluated.
-- Colorful native Today/Coach/Routines/You screens, clear everyday language, one-tap check-ins, light/dark themes and scalable text.
+![Android 9+](https://img.shields.io/badge/Android-9%2B-2845CE) ![Local first](https://img.shields.io/badge/Privacy-Local%20first-25633D) ![Account-free](https://img.shields.io/badge/Setup-Account%20free-9B351D)
 
-The bundled face model is pretrained MediaPipe, not a newly trained PSL or facial-bone model. Selfie proportions are not hidden skeletal measurements or clinical findings. Optional language-model weights are not included, downloaded automatically or quality-validated yet. Analysis previews are temporary unless you choose “Keep as a progress photo”; journal photos persist independently of analysis.
+[Get the Android APK](https://github.com/chittranshsharma/Aesthory/actions/workflows/android.yml)
 
-Health Connect/Google Health, broader specialist retrieval and live Notion/Obsidian connections are subsequent milestones, not active integrations. References currently support text/Markdown and web links, not PDF/image attachments. The built-in guide library is curated and limited, not exhaustive forum knowledge or custom model training. See [actual status](docs/STATUS.md), [habit/library guide](docs/HABITS.md), [timers/reminders](docs/TIMING.md), [scope](PRODUCT.md), [plan](docs/IMPLEMENTATION_PLAN.md) and [local analysis](docs/LOCAL_ANALYSIS.md).
+</div>
 
-## Build and run
+## Make the routine yours
 
-Use JDK 21 and Android SDK platform 37/build-tools 36.0.0. Android 9/API 28+ is required. AGP includes Kotlin; do not also apply the legacy Kotlin Android plugin.
+Open **Today** to see what’s due, start a timer, or log a quick check-in. Build a routine around your own schedule or pick a starter routine from **Coach**. Set weekly targets for completed habits and time spent, then see how the week actually went.
 
-Set `JAVA_HOME`. Create ignored `local.properties` with your SDK path, e.g. `sdk.dir=C\:/Users/you/AppData/Local/Android/Sdk`, or set `ANDROID_HOME`.
+- **Build detailed routines.** Give each habit its own schedule, category, instructions, duration, and tracking method. Add a shorter version for busy days and link products or references where you’ll need them.
+- **Stay on schedule.** Set reminders with quiet hours and snooze. Pause and resume habit timers, pick up after restarting the app, and review elapsed time before logging it.
+- **Get practical coaching.** Browse built-in guides for skin, hair, style, and physique. The on-device face check measures visible proportions from a selfie, gives framing feedback, and suggests styling options based on your goal.
+- **Keep a product and reference library.** Save products, dated observations, web links, and notes imported from text or Markdown. Reuse them across routines.
+
+## Bring your training and nutrition together
+
+<table>
+<tr>
+<td align="center" width="50%"><strong>Workout history</strong><br><img src="docs/screenshots/workouts.png" alt="Aesthory workout detail with bench press sets, weights and notes" width="270"></td>
+<td align="center" width="50%"><strong>Nutrition review</strong><br><img src="docs/screenshots/nutrition.png" alt="Aesthory dark mode nutrition review with editable calories and macros" width="270"></td>
+</tr>
+</table>
+
+**Workouts.** Import a Hevy workout CSV under **You → Workouts**. Review dates, units, exercises, sets, and notes before saving. Repeat imports skip unchanged sessions. Corrected sessions show a comparison and ask you to confirm the replacement.
+
+**Nutrition.** Pick a screenshot under **You → Nutrition**. Aesthory reads calories, protein, carbs, and fat on your phone. Check the date, correct any numbers, and save. You can also enter totals by hand. Each date holds one daily snapshot, and repeated screenshots are detected.
+
+## Keep progress private
+
+Save progress photos with dates, views, and notes, then compare earlier and later entries side by side. Your records live on your phone, and setup works without an account or API key. Built-in coaching, photo checks, and screenshot reading run on the device.
+
+Share a readable routine or an importable routine pack with a friend while keeping your private history separate. Use **You → Backup & restore** to make a password-protected copy of your records and progress photos before moving to another phone. Keep the backup password with your recovery materials.
+
+## Install on Android
+
+1. Open the [Android builds](https://github.com/chittranshsharma/Aesthory/actions/workflows/android.yml) and select a successful run on `main`.
+2. Download the **aesthory-debug** artifact, unzip it, and open the APK on your Android phone.
+3. Pick your focus in Aesthory and add your first routine.
+
+Requires **Android 9 or newer**. GitHub may ask you to sign in to download the build artifact.
+
+## Build from source
+
+Use **JDK 21** and **Android SDK platform 37** with **Build Tools 36.0.0**. Set `JAVA_HOME` and point `ANDROID_HOME` or the ignored `local.properties` file at your Android SDK.
 
 ```powershell
-.\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
-# Only on an owned test emulator/device: the runner uninstalls the app.
-.\gradlew.bat :app:connectedDebugAndroidTest
+.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
 ```
 
-On macOS/Linux use `sh ./gradlew` with the same tasks. First build downloads pinned Gradle/Maven dependencies. Install `app/build/outputs/apk/debug/app-debug.apk` or run from Android Studio. GitHub Actions also produces a debug APK artifact after successful checks.
+On macOS or Linux, use `sh ./gradlew` with the same tasks. The APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
 
-No key/account/paid service or personal data is needed for setup, routines or landmarks. Nutrition screenshots and photos are processed locally; Groq connection testing remains optional. Automatic backup is disabled. Use You → Backup & restore before uninstalling or moving phones: saved backups include records, journal photos and Recently deleted, exclude API keys/extra model files, and require their exact password. Forgotten passwords cannot be recovered. See [backup format and recovery](docs/BACKUPS.md). Universal debug APK includes native libraries for multiple ABIs; it is not a release-size benchmark.
-
-## Working with an agent
-
-Read [AGENTS.md](AGENTS.md), then [STATUS.md](docs/STATUS.md); load task-specific specs. [DESIGN.md](DESIGN.md) defines the native interface. [RESEARCH.md](docs/RESEARCH.md) records primary sources and changing constraints. Distinguish implemented behavior from the roadmap.
-
-## Third-party artifacts
-
-Gradle wrapper v9.4.1 is verified against upstream SHA-256; Apache-2.0 license is in `gradle/wrapper/LICENSE`. The official pretrained landmark bundle has license/source/SHA in `app/src/main/assets/models/`. Barlow Condensed bold is bundled from Google Fonts under SIL OFL, retained in `app/src/main/assets/licenses/Barlow-OFL.txt`. Optional model licenses depend on selected weights. Application code is original; official examples are references, not copied apps. No application license/distribution channel has been selected.
+The bundled MediaPipe landmark model carries source and license information in [model assets](app/src/main/assets/models/). Barlow Condensed is distributed under the [SIL Open Font License](app/src/main/assets/licenses/Barlow-OFL.txt). The Gradle wrapper includes its [Apache 2.0 license](gradle/wrapper/LICENSE).
